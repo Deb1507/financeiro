@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Meus Débitos</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --green: #1D9E75;
+      --green-d: #0F6E56;
+      --green-l: #E1F5EE;
+      --green-m: #5DCAA5;
+      --red: #E24B4A;
+      --red-l: #FCEBEB;
+      --blue: #378ADD;
+      --blue-l: #E6F1FB;
+      --orange: #BA7517;
+      --orange-l: #FEF3E2;
+      --bg: #F4F6F8;
+      --surface: #fff;
+      --border: #E8EAED;
+      --border-s: #D1D5DB;
+      --text: #111827;
+      --muted: #6B7280;
+      --faint: #9CA3AF;
+      --r: 12px;
+      --rs: 8px;
+      --sh: 0 1px 3px rgba(0, 0, 0, .08);
+      --sh-md: 0 4px 16px rgba(0, 0, 0, .12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh
+    }
+
+    #auth-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px
+    }
+
+    .auth-card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: var(--sh-md);
+      text-align: center
+    }
+
+    .auth-logo {
+      font-size: 40px;
+      margin-bottom: 14px
+    }
+
+    .auth-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px
+    }
+
+    .auth-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 24px;
+      line-height: 1.5
+    }
+
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 13px;
+      border-radius: var(--rs);
+      border: 1px solid var(--border-s);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer
+    }
+
+    .btn-google svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0
+    }
+
+    .auth-note {
+      font-size: 11px;
+      color: var(--faint);
+      margin-top: 14px;
+      line-height: 1.5
+    }
+
+    .header {
+      background: var(--green);
+      color: #fff;
+      padding: 16px 16px 0
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px
+    }
+
+    .header-name {
+      font-size: 16px;
+      font-weight: 700
+    }
+
+    .header-sub {
+      font-size: 12px;
+      opacity: .85
+    }
+
+    .avatar-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .25);
+      border: none;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer
+    }
+
+    .header-tabs {
+      display: flex
+    }
+
+    .htab {
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, .7);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      font-family: inherit
+    }
+
+    .htab.active {
+      color: #fff;
+      border-bottom-color: #fff
+    }
+
+    .content {
+      padding: 14px 14px 80px;
+      max-width: 600px;
+      margin: 0 auto
+    }
+
+    .page {
+      display: none
+    }
+
+    .page.active {
+      display: block
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px
+    }
+
+    .scard {
+      background: var(--surface);
+      border-radius: var(--r);
+      padding: 14px;
+      box-shadow: var(--sh);
+      border: 1px solid var(--border)
+    }
+
+    .scard-label {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 4px
+    }
+
+    .scard-val {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -.5px
+    }
+
+    .item-card {
+      background: var(--surface);
+      border-radius: var(--r);
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: var(--sh);
+      border: 1px solid var(--border)
+    }
+
+    .item-card.pago {
+      opacity: .6;
+      border-style: dashed
+    }
+
+    .item-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 10px
+    }
+
+    .item-title {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3
+    }
+
+    .item-val {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -.5px;
+      white-space: nowrap;
+      margin-left: 12px
+    }
+
+    .item-detail {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px
+    }
+
+    .detail-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 10px;
+      font-weight: 600
+    }
+
+    .tag-pend {
+      background: var(--red-l);
+      color: #A32D2D
+    }
+
+    .tag-pago {
+      background: var(--green-l);
+      color: var(--green-d)
+    }
+
+    .tag-parc {
+      background: var(--orange-l);
+      color: #854F0B
+    }
+
+    .div-detalhe {
+      background: var(--bg);
+      border-radius: var(--rs);
+      padding: 10px 12px;
+      margin-top: 8px;
+      border: 1px solid var(--border)
+    }
+
+    .div-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      padding: 3px 0
+    }
+
+    .prog {
+      height: 6px;
+      background: var(--bg);
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin: 8px 0 4px
+    }
+
+    .prog-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .4s
+    }
+
+    .prev-card {
+      background: var(--surface);
+      border-radius: var(--r);
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: var(--sh);
+      border: 1px solid var(--border)
+    }
+
+    .prev-month {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .prev-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--bg)
+    }
+
+    .prev-item:last-child {
+      border: none
+    }
+
+    .alert {
+      padding: 10px 14px;
+      border-radius: var(--rs);
+      font-size: 12px;
+      margin-bottom: 10px
+    }
+
+    .alert.ok {
+      background: var(--green-l);
+      color: var(--green-d);
+      border: 1px solid var(--green-m)
+    }
+
+    .alert.err {
+      background: var(--red-l);
+      color: #A32D2D;
+      border: 1px solid #F09595
+    }
+
+    .alert.info {
+      background: var(--blue-l);
+      color: #185FA5;
+      border: 1px solid #85B7EB
+    }
+
+    .empty {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--faint);
+      font-size: 13px
+    }
+
+    .spinner-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin .7s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--faint);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin: 16px 0 8px
+    }
+
+    .g {
+      color: var(--green)
+    }
+
+    .r {
+      color: var(--red)
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">💸</div>
+      <div class="auth-title">Meus Débitos</div>
+      <div class="auth-sub">Faça login para ver seus débitos e histórico de compras</div>
+      <button class="btn-google" onclick="loginGoogle()">
+        <svg viewBox="0 0 24 24">
+          <path fill="#4285F4"
+            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+          <path fill="#34A853"
+            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+          <path fill="#FBBC05"
+            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+          <path fill="#EA4335"
+            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+        </svg>
+        Entrar com Google
+      </button>
+      <div class="auth-note">Acesse somente se o dono do app vinculou o seu email. Em dúvida, peça para quem te enviou o
+        link.</div>
+      <div id="auth-err" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <div class="header-name" id="guest-name">Olá!</div>
+          <div class="header-sub" id="guest-sub"></div>
+        </div>
+        <button class="avatar-btn" id="guest-avatar" onclick="logout()">?</button>
+      </div>
+      <div class="header-tabs">
+        <button class="htab active" onclick="go('pendentes')">Pendentes</button>
+        <button class="htab" onclick="go('historico')">Histórico</button>
+        <button class="htab" onclick="go('previsao')">Previsão</button>
+      </div>
+    </div>
+    <div class="content">
+      <div id="loading" class="spinner-wrap">
+        <div class="spinner"></div> Carregando...
+      </div>
+      <div id="page-pendentes" class="page active">
+        <div id="summary-grid" class="summary-grid"></div>
+        <div id="acesso-negado" class="alert err" style="display:none">Seu email não está vinculado. Contate quem te
+          enviou o link.</div>
+        <div id="pend-list"></div>
+      </div>
+      <div id="page-historico" class="page">
+        <div class="section-title">Tudo registrado no seu nome</div>
+        <div id="hist-list"></div>
+      </div>
+      <div id="page-previsao" class="page">
+        <div class="section-title">Próximos meses</div>
+        <div class="alert info" style="margin-bottom:12px">Parcelas futuras e débitos pendentes, por mês.</div>
+        <div id="prev-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://jkxnqvdlgrtvuuqnhcpa.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpreG5xdmRsZ3J0dnV1cW5oY3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDg3ODUsImV4cCI6MjA5NjA4NDc4NX0.C9LnJvJWGUySgbiMgVfDshUh4MCAt58uF9AAAkZ6FcM';
+
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const MOS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    const h = s => { const d = document.createElement('div'); d.textContent = String(s ?? ''); return d.innerHTML; };
+    const fmtBRL = v => 'R$\u00a0' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fmtData = s => { try { return new Date(s + 'T12:00:00').toLocaleDateString('pt-BR'); } catch (e) { return s || ''; } };
+    const toDate = s => new Date((s || '2000-01-01') + 'T12:00:00');
+    const iniciais = n => (n || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+    let USER = null;
+    let D = { pessoa: null, itens: [], divisoes: [], cartoes: [], contas: [], categorias: [] };
+
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) { USER = session.user; document.getElementById('auth-screen').style.display = 'none'; document.getElementById('app').style.display = 'block'; await carregarDados(); }
+      else { USER = null; document.getElementById('auth-screen').style.display = 'flex'; document.getElementById('app').style.display = 'none'; }
+    });
+
+    async function loginGoogle() {
+      const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+      if (error) document.getElementById('auth-err').innerHTML = `<div class="alert err">${h(error.message)}</div>`;
+    }
+    async function logout() { await sb.auth.signOut(); }
+
+    async function carregarDados() {
+      document.getElementById('loading').style.display = 'flex';
+      try {
+        const { data: pessoaData } = await sb.from('pessoas').select('*').eq('user_id', USER.id).single();
+        if (!pessoaData) {
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('acesso-negado').style.display = 'block';
+          document.getElementById('guest-name').textContent = 'Olá!';
+          return;
+        }
+        D.pessoa = pessoaData;
+        document.getElementById('guest-avatar').textContent = iniciais(D.pessoa.nome);
+        document.getElementById('guest-name').textContent = `Olá, ${D.pessoa.nome.split(' ')[0]}!`;
+        document.getElementById('guest-sub').textContent = 'Seus débitos e histórico';
+
+        const { data: itensData } = await sb.from('divisao_itens').select('*').eq('pessoa_id', D.pessoa.id).order('created_at', { ascending: false });
+        D.itens = (itensData || []).map(i => ({ ...i, valor: +i.valor, pago: i.pago === true || i.pago === 'true' }));
+
+        if (D.itens.length) {
+          const divIds = [...new Set(D.itens.map(i => i.divisao_id))];
+          const { data: divsData } = await sb.from('divisoes').select('*').in('id', divIds);
+          D.divisoes = (divsData || []).map(d => ({ ...d, valor_total: +d.valor_total }));
+          if (D.divisoes.length) {
+            const ownerId = D.divisoes[0].owner_id;
+            const [cartoesR, contasR, catsR] = await Promise.all([
+              sb.from('cartoes').select('id,nome,cor').eq('owner_id', ownerId),
+              sb.from('contas').select('id,nome').eq('owner_id', ownerId),
+              sb.from('categorias').select('id,nome,cor').eq('owner_id', ownerId),
+            ]);
+            D.cartoes = cartoesR.data || []; D.contas = contasR.data || []; D.categorias = catsR.data || [];
+          }
+        }
+        document.getElementById('loading').style.display = 'none';
+        render();
+      } catch (e) {
+        document.getElementById('loading').innerHTML = `<div class="alert err">Erro: ${h(e.message)}</div>`;
+      }
+    }
+
+    function go(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.htab').forEach(b => b.classList.remove('active'));
+      document.getElementById('page-' + id)?.classList.add('active');
+      ['pendentes', 'historico', 'previsao'].forEach((p, i) => { if (p === id) document.querySelectorAll('.htab')[i]?.classList.add('active'); });
+    }
+
+    function render() { renderSummary(); renderPendentes(); renderHistorico(); renderPrevisao(); }
+    const catById = id => D.categorias.find(c => c.id === id) || { nome: 'Outros', cor: '#888' };
+    const cartaoById = id => D.cartoes.find(c => c.id === id) || null;
+    const contaById = id => D.contas.find(c => c.id === id) || null;
+    const divById = id => D.divisoes.find(d => d.id === id) || null;
+
+    function renderSummary() {
+      const el = document.getElementById('summary-grid'); if (!el || !D.pessoa) return;
+      const pend = D.itens.filter(i => !i.pago);
+      const pagos = D.itens.filter(i => i.pago);
+      const totalP = pend.reduce((a, i) => a + i.valor, 0);
+      const totalPg = pagos.reduce((a, i) => a + i.valor, 0);
+      const totalG = D.itens.reduce((a, i) => a + i.valor, 0);
+      const pct = totalG > 0 ? Math.round(totalPg / totalG * 100) : 0;
+      el.innerHTML = `
+    <div class="scard" style="grid-column:1/-1">
+      <div class="scard-label">Total pendente</div>
+      <div class="scard-val r">${h(fmtBRL(totalP))}</div>
+      <div class="prog"><div class="prog-fill" style="width:${pct}%;background:var(--green)"></div></div>
+      <div style="font-size:10px;color:var(--muted)">${pct}% pago — ${h(fmtBRL(totalPg))} de ${h(fmtBRL(totalG))}</div>
+    </div>
+    <div class="scard"><div class="scard-label">Itens pendentes</div><div class="scard-val" style="font-size:24px">${pend.length}</div></div>
+    <div class="scard"><div class="scard-label">Já pago</div><div class="scard-val g" style="font-size:17px">${h(fmtBRL(totalPg))}</div></div>`;
+    }
+
+    function renderPendentes() {
+      const el = document.getElementById('pend-list'); if (!el) return;
+      const pend = D.itens.filter(i => !i.pago).sort((a, b) => { const da = divById(a.divisao_id), db = divById(b.divisao_id); return (da?.data || '') < (db?.data || '') ? -1 : 1; });
+      el.innerHTML = pend.length ? pend.map(i => itemCardHTML(i, false)).join('') : '<div class="empty">🎉 Tudo pago! Nenhum débito pendente.</div>';
+    }
+
+    function renderHistorico() {
+      const el = document.getElementById('hist-list'); if (!el) return;
+      const todos = [...D.itens].sort((a, b) => { const da = divById(a.divisao_id), db = divById(b.divisao_id); return (da?.data || '') > (db?.data || '') ? -1 : 1; });
+      el.innerHTML = todos.length ? todos.map(i => itemCardHTML(i, true)).join('') : '<div class="empty">Nenhum registro encontrado.</div>';
+    }
+
+    function itemCardHTML(item, showStatus) {
+      const div = divById(item.divisao_id); if (!div) return '';
+      const cat = catById(div.categoria_id);
+      const cartao = cartaoById(div.cartao_id);
+      const conta = contaById(div.conta_id);
+      const parcInfo = div.parcelas > 1 ? `${div.parcela_num}/${div.parcelas}` : '';
+      return `<div class="item-card${item.pago ? ' pago' : ''}">
+    <div class="item-header">
+      <div style="flex:1;min-width:0">
+        <div class="item-title">${h(div.descricao)}</div>
+        ${parcInfo ? `<span class="badge tag-parc" style="margin-top:4px">${parcInfo}</span>` : ''}
+      </div>
+      <div style="text-align:right">
+        <div class="item-val" style="color:${item.pago ? 'var(--green)' : 'var(--red)'}">${h(fmtBRL(item.valor))}</div>
+        ${showStatus ? `<span class="badge ${item.pago ? 'tag-pago' : 'tag-pend'}" style="margin-top:4px">${item.pago ? '✓ Pago' : 'Pendente'}</span>` : ''}
+      </div>
+    </div>
+    <div class="item-detail"><span class="detail-dot" style="background:${cat.cor}"></span><span>${h(cat.nome)}</span><span>·</span><span>${h(fmtData(div.data))}</span></div>
+    ${cartao ? `<div class="item-detail">💳 <span>Cartão ${h(cartao.nome)}</span></div>` : ''}
+    ${conta ? `<div class="item-detail">🏦 <span>Conta ${h(conta.nome)}</span></div>` : ''}
+    ${div.obs ? `<div class="item-detail">📝 <span>${h(div.obs)}</span></div>` : ''}
+    <div class="div-detalhe">
+      <div class="div-row"><span style="color:var(--muted)">Total da compra</span><span>${h(fmtBRL(div.valor_total))}</span></div>
+      <div class="div-row" style="color:var(--green-d);font-weight:600"><span>Sua parte</span><span>${h(fmtBRL(item.valor))}</span></div>
+      ${item.pago && item.data_pagamento ? `<div class="div-row" style="color:var(--green-d)"><span>Pago em</span><span>${h(fmtData(item.data_pagamento))}</span></div>` : ''}
+    </div>
+  </div>`;
+    }
+
+    function renderPrevisao() {
+      const el = document.getElementById('prev-list'); if (!el) return;
+      const hoje = new Date();
+      const porMes = {};
+      D.itens.filter(i => !i.pago).forEach(i => {
+        const div = divById(i.divisao_id); if (!div) return;
+        const d = toDate(div.data);
+        if (d < new Date(hoje.getFullYear(), hoje.getMonth(), 1)) return;
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        if (!porMes[key]) porMes[key] = { mes: d.getMonth(), ano: d.getFullYear(), itens: [], total: 0 };
+        porMes[key].itens.push(i); porMes[key].total += i.valor;
+      });
+      const meses = Object.entries(porMes).sort((a, b) => a[0].localeCompare(b[0]));
+      if (!meses.length) { el.innerHTML = '<div class="empty">Nenhuma previsão para os próximos meses.</div>'; return; }
+      el.innerHTML = meses.map(([, info]) => {
+        const isMesAtual = info.mes === hoje.getMonth() && info.ano === hoje.getFullYear();
+        return `<div class="prev-card">
+      <div class="prev-month"><span>${MOS[info.mes]} de ${info.ano}${isMesAtual ? ' · mês atual' : ''}</span><span style="font-size:13px;font-weight:700;color:var(--red)">${h(fmtBRL(info.total))}</span></div>
+      ${info.itens.map(i => {
+          const div = divById(i.divisao_id); if (!div) return ''; const cat = catById(div.categoria_id);
+          return `<div class="prev-item"><span style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:${cat.cor};flex-shrink:0;display:inline-block"></span><span>${h(div.descricao)}</span>${div.parcelas > 1 ? `<span class="badge tag-parc">${div.parcela_num}/${div.parcelas}</span>` : ''}</span><span style="font-weight:600;color:var(--red)">${h(fmtBRL(i.valor))}</span></div>`;
+        }).join('')}
+    </div>`;
+      }).join('');
+    }
+  </script>
+</body>
+
+</html>

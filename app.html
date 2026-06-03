@@ -205,7 +205,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);b
   </div>
 
   <div class="content">
-    <div id="loading" class="spinner-wrap"><div class="spinner"></div> Carregando...</div>
+    <div id="loading" style="display:flex;position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:200;align-items:center;justify-content:center;gap:10px;font-size:13px;color:#6B7280"><div class="spinner"></div> Carregando...</div>
 
     <!-- DASHBOARD -->
     <div id="page-dashboard" class="page">
@@ -632,6 +632,7 @@ async function carregarDados() {
 
     document.getElementById('loading').style.display = 'none';
     buildYearFilter();
+    go('dashboard'); // garante página ativa após dados carregarem
     render();
   } catch(e) {
     document.getElementById('loading').innerHTML = `<div class="alert err">Erro ao carregar: ${h(e.message)} <button class="btn sm primary" onclick="carregarDados()" style="margin-left:8px">Tentar novamente</button></div>`;
@@ -1709,6 +1710,7 @@ async function remDivisao(grupoId) {
 document.getElementById('tx-data').value=new Date().toISOString().split('T')[0];
 document.getElementById('div-data').value=new Date().toISOString().split('T')[0];
 onTipoChange();
+go('dashboard'); // ativa a página inicial
 
 // ════════════════════════════════════════════════════════════
 // EDIÇÃO COMPLETA — todas as entidades

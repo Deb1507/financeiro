@@ -1468,6 +1468,8 @@
     // ════════════════════════════════════════════════════════════
     const SUPABASE_URL = 'https://jkxnqvdlgrtvuuqnhcpa.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpreG5xdmRsZ3J0dnV1cW5oY3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDg3ODUsImV4cCI6MjA5NjA4NDc4NX0.C9LnJvJWGUySgbiMgVfDshUh4MCAt58uF9AAAkZ6FcM';
+
+
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const MOS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -1555,18 +1557,50 @@
       showLoading(true);
       try {
         const uid = USER.id;
-        const [txsR, cartoesR, contasR, recsR, metasR, catsR, orcsR, pessR, divsR, itensR] = await Promise.all([
-          sb.from('transacoes').select('*').eq('owner_id', uid).order('data', { ascending: false }),
-          sb.from('cartoes').select('*').eq('owner_id', uid),
-          sb.from('contas').select('*').eq('owner_id', uid),
-          sb.from('recorrentes').select('*').eq('owner_id', uid),
-          sb.from('metas').select('*').eq('owner_id', uid),
-          sb.from('categorias').select('*').eq('owner_id', uid).order('nome'),
-          sb.from('orcamentos').select('*').eq('owner_id', uid),
-          sb.from('pessoas').select('*').eq('owner_id', uid).eq('ativo', true),
-          sb.from('divisoes').select('*').eq('owner_id', uid).order('data', { ascending: false }),
-          sb.from('divisao_itens').select('*').eq('owner_id', uid),
-        ]);
+        console.log('[financeiro] uid:', uid);
+
+        // Busca tabela por tabela para identificar qual trava
+        console.log('[financeiro] buscando transacoes...');
+        const txsR = await sb.from('transacoes').select('*').eq('owner_id', uid).order('data', { ascending: false });
+        console.log('[financeiro] transacoes ok, erro:', txsR.error);
+
+        console.log('[financeiro] buscando cartoes...');
+        const cartoesR = await sb.from('cartoes').select('*').eq('owner_id', uid);
+        console.log('[financeiro] cartoes ok, erro:', cartoesR.error);
+
+        console.log('[financeiro] buscando contas...');
+        const contasR = await sb.from('contas').select('*').eq('owner_id', uid);
+        console.log('[financeiro] contas ok, erro:', contasR.error);
+
+        console.log('[financeiro] buscando recorrentes...');
+        const recsR = await sb.from('recorrentes').select('*').eq('owner_id', uid);
+        console.log('[financeiro] recorrentes ok, erro:', recsR.error);
+
+        console.log('[financeiro] buscando metas...');
+        const metasR = await sb.from('metas').select('*').eq('owner_id', uid);
+        console.log('[financeiro] metas ok, erro:', metasR.error);
+
+        console.log('[financeiro] buscando categorias...');
+        const catsR = await sb.from('categorias').select('*').eq('owner_id', uid).order('nome');
+        console.log('[financeiro] categorias ok, erro:', catsR.error);
+
+        console.log('[financeiro] buscando orcamentos...');
+        const orcsR = await sb.from('orcamentos').select('*').eq('owner_id', uid);
+        console.log('[financeiro] orcamentos ok, erro:', orcsR.error);
+
+        console.log('[financeiro] buscando pessoas...');
+        const pessR = await sb.from('pessoas').select('*').eq('owner_id', uid).eq('ativo', true);
+        console.log('[financeiro] pessoas ok, erro:', pessR.error);
+
+        console.log('[financeiro] buscando divisoes...');
+        const divsR = await sb.from('divisoes').select('*').eq('owner_id', uid).order('data', { ascending: false });
+        console.log('[financeiro] divisoes ok, erro:', divsR.error);
+
+        console.log('[financeiro] buscando divisao_itens...');
+        const itensR = await sb.from('divisao_itens').select('*').eq('owner_id', uid);
+        console.log('[financeiro] divisao_itens ok, erro:', itensR.error);
+
+        console.log('[financeiro] processando dados...');
         S.txs = (txsR.data || []).map(t => ({ ...t, _date: toDate(t.data), valor: +t.valor }));
         S.cartoes = cartoesR.data || [];
         S.contas = (contasR.data || []).map(c => ({ ...c, saldo_inicial: +c.saldo_inicial }));
@@ -1578,22 +1612,32 @@
         S.pessoas = pessR.data || [];
         S.divisoes = (divsR.data || []).map(d => ({ ...d, valor_total: +d.valor_total }));
         S.divisaoItens = (itensR.data || []).map(i => ({ ...i, valor: +i.valor, pago: i.pago === true || i.pago === 'true' }));
-        if (!S.cats.length) await criarCatsPadrao();
+
+        console.log('[financeiro] dados processados. cats:', S.cats.length);
+        if (!S.cats.length) {
+          console.log('[financeiro] criando categorias padrao...');
+          await criarCatsPadrao();
+          console.log('[financeiro] categorias criadas:', S.cats.length);
+        }
+
+        console.log('[financeiro] finalizando, chamando showLoading(false)...');
         showLoading(false);
         buildYearFilter();
         go('dashboard');
         render();
+        console.log('[financeiro] render() concluido');
+
       } catch (e) {
         showLoading(false);
-        console.error('carregarDados erro:', e);
-        // Mostrar erro de forma segura
+        console.error('[financeiro] ERRO em carregarDados:', e);
+        console.error('[financeiro] stack:', e.stack);
         setTimeout(function () {
           var content = document.querySelector('.content');
           if (content) {
             var errEl = document.createElement('div');
             errEl.className = 'alert err';
             errEl.style.cssText = 'position:relative;z-index:1;margin:12px';
-            errEl.innerHTML = 'Erro ao carregar dados: ' + h(String(e.message || e)) +
+            errEl.innerHTML = 'Erro ao carregar: ' + h(String(e.message || e)) +
               ' <button class="btn sm primary" onclick="carregarDados()" style="margin-left:8px">Tentar novamente</button>';
             content.prepend(errEl);
           }

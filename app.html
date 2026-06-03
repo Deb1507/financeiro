@@ -29,7 +29,7 @@
       --faint: #9CA3AF;
       --r: 10px;
       --rs: 7px;
-      --sh: 0 1px 3px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .05);
+      --sh: 0 1px 3px rgba(0, 0, 0, .08);
       --sh-md: 0 4px 16px rgba(0, 0, 0, .12);
     }
 
@@ -40,20 +40,24 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 14px;
       color: var(--text);
       background: var(--bg);
       min-height: 100vh
     }
 
-    /* AUTH SCREEN */
+    /* AUTH */
     #auth-screen {
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
       padding: 20px
+    }
+
+    #auth-screen.visible {
+      display: flex
     }
 
     .auth-card {
@@ -96,12 +100,7 @@
       color: var(--text);
       font-size: 14px;
       font-weight: 500;
-      cursor: pointer;
-      transition: background .15s
-    }
-
-    .btn-google:hover {
-      background: var(--bg)
+      cursor: pointer
     }
 
     .btn-google svg {
@@ -114,6 +113,33 @@
       font-size: 11px;
       color: var(--faint);
       margin-top: 16px
+    }
+
+    /* APP */
+    #app {
+      display: none
+    }
+
+    #app.visible {
+      display: block
+    }
+
+    /* LOADING */
+    #loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, .92);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    #loading-overlay.visible {
+      display: flex
     }
 
     /* TOPBAR */
@@ -185,25 +211,16 @@
       background: #fff
     }
 
-    .topbar-user {
-      display: flex;
-      align-items: center;
-      gap: 8px
-    }
-
-    .avatar {
+    .avatar-btn {
       width: 28px;
       height: 28px;
       border-radius: 50%;
       background: rgba(255, 255, 255, .25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border: none;
+      color: #fff;
       font-size: 12px;
       font-weight: 700;
-      cursor: pointer;
-      border: none;
-      color: #fff
+      cursor: pointer
     }
 
     /* NAV */
@@ -241,17 +258,14 @@
       font-weight: 600
     }
 
-    .nav-btn:hover:not(.active) {
-      color: var(--text)
-    }
-
-    /* LAYOUT */
+    /* CONTENT */
     .content {
       padding: 14px 14px 80px;
       max-width: 920px;
       margin: 0 auto
     }
 
+    /* PAGES — todas ocultas, JS ativa a correta */
     .page {
       display: none
     }
@@ -287,12 +301,6 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 11px
-    }
-
-    .g3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 9px
     }
 
     .full {
@@ -485,8 +493,7 @@
     .tx-val {
       font-size: 13px;
       font-weight: 700;
-      white-space: nowrap;
-      font-variant-numeric: tabular-nums
+      white-space: nowrap
     }
 
     /* BADGES */
@@ -524,12 +531,7 @@
       color: #3A2D8F
     }
 
-    .tag-d {
-      background: #FDF2F8;
-      color: #9D174D
-    }
-
-    /* BARS / PROGRESS */
+    /* BARS */
     .bar-row {
       display: flex;
       align-items: center;
@@ -643,25 +645,11 @@
       font-weight: 600
     }
 
-    .tab:hover:not(.active) {
-      background: var(--bg)
-    }
-
     /* MISC */
     .empty {
       text-align: center;
       padding: 32px 16px;
       color: var(--faint);
-      font-size: 13px
-    }
-
-    .spinner-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 48px;
-      gap: 10px;
-      color: var(--muted);
       font-size: 13px
     }
 
@@ -860,10 +848,6 @@
         grid-template-columns: 1fr
       }
 
-      .g3 {
-        grid-template-columns: 1fr 1fr
-      }
-
       .content {
         padding: 12px 12px 80px
       }
@@ -873,8 +857,13 @@
 
 <body>
 
-  <!-- ══ TELA DE LOGIN ══════════════════════════════════════ -->
-  <div id="auth-screen" style="display:none">
+  <!-- LOADING OVERLAY — separado de tudo, controlado por JS -->
+  <div id="loading-overlay">
+    <div class="spinner"></div> Carregando...
+  </div>
+
+  <!-- TELA DE LOGIN -->
+  <div id="auth-screen">
     <div class="auth-card">
       <div class="auth-logo">💰</div>
       <div class="auth-title">Financeiro Pessoal</div>
@@ -897,23 +886,21 @@
     </div>
   </div>
 
-  <!-- ══ APP PRINCIPAL ══════════════════════════════════════ -->
-  <div id="app" style="display:none">
+  <!-- APP PRINCIPAL -->
+  <div id="app">
     <div class="topbar">
       <div class="topbar-title">💰 Financeiro</div>
       <div class="topbar-month">
-        <button onclick="chM(-1)">‹</button>
+        <button onclick="chM(-1)">&#8249;</button>
         <span id="month-label"></span>
-        <button onclick="chM(1)">›</button>
+        <button onclick="chM(1)">&#8250;</button>
         <select id="year-sel" onchange="S.curYear=+this.value;render()"></select>
       </div>
-      <div class="topbar-user">
-        <button class="avatar" onclick="logout()" title="Sair">?</button>
-      </div>
+      <button class="avatar-btn" id="user-avatar" onclick="logout()" title="Sair">?</button>
     </div>
 
     <div class="nav">
-      <button class="nav-btn active" onclick="go('dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="go('dashboard')">Dashboard</button>
       <button class="nav-btn" onclick="go('lancamentos')">Lançamentos</button>
       <button class="nav-btn" onclick="go('divisoes')">Divisões</button>
       <button class="nav-btn" onclick="go('pessoas')">Pessoas</button>
@@ -926,11 +913,6 @@
     </div>
 
     <div class="content">
-      <div id="loading"
-        style="display:none;position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:200;align-items:center;justify-content:center;gap:10px;font-size:13px;color:#6B7280">
-        <div class="spinner"></div> Carregando...
-      </div>
-
       <!-- DASHBOARD -->
       <div id="page-dashboard" class="page">
         <div id="dash-alerts" style="margin-bottom:8px"></div>
@@ -1087,7 +1069,7 @@
                   placeholder="Ex: Jantar, Viagem..."></div>
               <div class="fg"><label>Data</label><input type="date" id="div-data"></div>
               <div class="fg"><label>Valor total (R$)</label><input type="number" id="div-valor" step="0.01" min="0"
-                  oninput="onDivValorChange()"></div>
+                  oninput="atualizarDivCheck()"></div>
               <div class="fg"><label>Categoria</label><select id="div-cat"></select></div>
               <div class="fg"><label>Cartão usado</label><select id="div-cartao">
                   <option value="">— Nenhum —</option>
@@ -1096,7 +1078,7 @@
                   <option value="">— Nenhuma —</option>
                 </select></div>
               <div class="fg"><label>Parcelas</label>
-                <select id="div-parcelas" onchange="onDivValorChange()">
+                <select id="div-parcelas">
                   <option value="1">À vista</option>
                   <option value="2">2x</option>
                   <option value="3">3x</option>
@@ -1148,16 +1130,15 @@
         <div id="pess-nova" style="display:none">
           <div class="card">
             <div class="g2">
-              <div class="fg full"><label>Nome</label><input type="text" id="p-nome" placeholder="Ex: João, Maria...">
-              </div>
-              <div class="fg full"><label>Email (para dar acesso ao portal)</label><input type="email" id="p-email"
+              <div class="fg full"><label>Nome</label><input type="text" id="p-nome"></div>
+              <div class="fg full"><label>Email (para acesso ao portal)</label><input type="email" id="p-email"
                   placeholder="email@exemplo.com (opcional)"></div>
               <div class="fg"><label>Cor</label><input type="color" id="p-cor" value="#378ADD"
                   style="padding:2px 4px;height:36px"></div>
             </div>
-            <div class="alert info" style="margin-bottom:8px">O email é necessário para dar acesso ao portal. Se não
-              informar, a pessoa aparece só como contato.</div>
-            <div class="btn-row"><button class="btn primary" onclick="addPessoa()">Cadastrar</button></div>
+            <div class="alert info">O email é necessário para dar acesso ao portal da convidada.</div>
+            <div class="btn-row" style="margin-top:10px"><button class="btn primary"
+                onclick="addPessoa()">Cadastrar</button></div>
             <div id="pess-alert" style="margin-top:8px"></div>
           </div>
         </div>
@@ -1181,14 +1162,12 @@
           <div class="card">
             <div class="g2">
               <div class="fg full"><label>Nome</label><input type="text" id="cnt-nome"></div>
-              <div class="fg"><label>Tipo</label>
-                <select id="cnt-tipo">
+              <div class="fg"><label>Tipo</label><select id="cnt-tipo">
                   <option value="corrente">Conta corrente</option>
                   <option value="digital">Digital</option>
                   <option value="poupanca">Poupança</option>
                   <option value="carteira">Carteira</option>
-                </select>
-              </div>
+                </select></div>
               <div class="fg"><label>Saldo inicial (R$)</label><input type="number" id="cnt-saldo" step="0.01"></div>
               <div class="fg"><label>Cor</label><input type="color" id="cnt-cor" value="#378ADD"
                   style="padding:2px 4px;height:36px"></div>
@@ -1238,13 +1217,11 @@
           <div class="card">
             <div class="g2">
               <div class="fg full"><label>Descrição</label><input type="text" id="r-desc"></div>
-              <div class="fg"><label>Tipo</label>
-                <select id="r-tipo">
+              <div class="fg"><label>Tipo</label><select id="r-tipo">
                   <option value="entrada">Entrada</option>
                   <option value="saida">Saída</option>
                   <option value="cartao">Cartão</option>
-                </select>
-              </div>
+                </select></div>
               <div class="fg"><label>Valor (R$)</label><input type="number" id="r-valor" step="0.01" min="0"></div>
               <div class="fg"><label>Categoria</label><select id="r-cat"></select></div>
               <div class="fg"><label>Dia do mês</label><input type="number" id="r-dia" min="1" max="31"></div>
@@ -1324,26 +1301,22 @@
           <div id="budget-list"></div>
         </div>
       </div>
-    </div>
-  </div>
+    </div><!-- /content -->
+  </div><!-- /app -->
 
-  <!-- MODAL DE EDIÇÃO -->
+  <!-- MODAL: EDITAR TRANSAÇÃO -->
   <div id="edit-modal" class="modal-bg">
     <div class="modal">
-      <div class="modal-header">
-        <span class="modal-title">Editar lançamento</span>
-        <button class="btn ghost" onclick="fecharModal('edit-modal')" style="font-size:18px;padding:4px 8px">✕</button>
-      </div>
+      <div class="modal-header"><span class="modal-title">Editar lançamento</span><button class="btn ghost"
+          onclick="fecharModal('edit-modal')" style="font-size:18px;padding:4px 8px">✕</button></div>
       <input type="hidden" id="edit-id">
       <div class="g2">
-        <div class="fg"><label>Tipo</label>
-          <select id="edit-tipo" onchange="onEditTipoChange()">
+        <div class="fg"><label>Tipo</label><select id="edit-tipo" onchange="onEditTipoChange()">
             <option value="saida">Saída</option>
             <option value="entrada">Entrada</option>
             <option value="cartao">Cartão</option>
             <option value="transferencia">Transferência</option>
-          </select>
-        </div>
+          </select></div>
         <div class="fg"><label>Data</label><input type="date" id="edit-data"></div>
         <div class="fg full"><label>Descrição</label><input type="text" id="edit-desc"></div>
         <div class="fg"><label>Valor (R$)</label><input type="number" id="edit-valor" step="0.01" min="0"></div>
@@ -1358,13 +1331,138 @@
       </div>
       <div id="edit-parc-aviso" style="margin-bottom:8px"></div>
       <div id="edit-alert" style="margin-bottom:8px"></div>
-      <div class="btn-row">
-        <button class="btn" onclick="fecharModal('edit-modal')">Cancelar</button>
-        <button class="btn primary" onclick="salvarEdicao()">Salvar</button>
-      </div>
+      <div class="btn-row"><button class="btn" onclick="fecharModal('edit-modal')">Cancelar</button><button
+          class="btn primary" onclick="salvarEdicao()">Salvar</button></div>
     </div>
   </div>
+
+  <!-- MODAL: EDITAR CONTA -->
+  <div id="modal-conta" class="modal-bg">
+    <div class="modal">
+      <div class="modal-header"><span class="modal-title">Editar conta</span><button class="btn ghost"
+          onclick="fecharModal('modal-conta')" style="font-size:18px;padding:4px 8px">✕</button></div>
+      <input type="hidden" id="ec-id">
+      <div class="g2">
+        <div class="fg full"><label>Nome</label><input type="text" id="ec-nome"></div>
+        <div class="fg"><label>Tipo</label><select id="ec-tipo">
+            <option value="corrente">Conta corrente</option>
+            <option value="digital">Digital</option>
+            <option value="poupanca">Poupança</option>
+            <option value="carteira">Carteira</option>
+          </select></div>
+        <div class="fg"><label>Saldo inicial (R$)</label><input type="number" id="ec-saldo" step="0.01"></div>
+        <div class="fg"><label>Cor</label><input type="color" id="ec-cor" style="padding:2px 4px;height:36px"></div>
+      </div>
+      <div id="ec-alert" style="margin-bottom:8px"></div>
+      <div class="btn-row"><button class="btn" onclick="fecharModal('modal-conta')">Cancelar</button><button
+          class="btn primary" onclick="salvarConta()">Salvar</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR CARTÃO -->
+  <div id="modal-cartao" class="modal-bg">
+    <div class="modal">
+      <div class="modal-header"><span class="modal-title">Editar cartão</span><button class="btn ghost"
+          onclick="fecharModal('modal-cartao')" style="font-size:18px;padding:4px 8px">✕</button></div>
+      <input type="hidden" id="ecar-id">
+      <div class="g2">
+        <div class="fg full"><label>Nome</label><input type="text" id="ecar-nome"></div>
+        <div class="fg"><label>Fechamento (dia)</label><input type="number" id="ecar-fecha" min="1" max="31"></div>
+        <div class="fg"><label>Vencimento (dia)</label><input type="number" id="ecar-vence" min="1" max="31"></div>
+        <div class="fg"><label>Limite (R$)</label><input type="number" id="ecar-limite" min="0"></div>
+        <div class="fg"><label>Cor</label><input type="color" id="ecar-cor" style="padding:2px 4px;height:36px"></div>
+      </div>
+      <div id="ecar-alert" style="margin-bottom:8px"></div>
+      <div class="btn-row"><button class="btn" onclick="fecharModal('modal-cartao')">Cancelar</button><button
+          class="btn primary" onclick="salvarCartao()">Salvar</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR RECORRENTE -->
+  <div id="modal-rec" class="modal-bg">
+    <div class="modal">
+      <div class="modal-header"><span class="modal-title">Editar recorrente</span><button class="btn ghost"
+          onclick="fecharModal('modal-rec')" style="font-size:18px;padding:4px 8px">✕</button></div>
+      <input type="hidden" id="er-id">
+      <div class="g2">
+        <div class="fg full"><label>Descrição</label><input type="text" id="er-desc"></div>
+        <div class="fg"><label>Tipo</label><select id="er-tipo">
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+            <option value="cartao">Cartão</option>
+          </select></div>
+        <div class="fg"><label>Valor (R$)</label><input type="number" id="er-valor" step="0.01" min="0"></div>
+        <div class="fg"><label>Categoria</label><select id="er-cat"></select></div>
+        <div class="fg"><label>Dia do mês</label><input type="number" id="er-dia" min="1" max="31"></div>
+        <div class="fg"><label>Conta/Cartão</label><select id="er-conta"></select></div>
+      </div>
+      <div id="er-alert" style="margin-bottom:8px"></div>
+      <div class="btn-row"><button class="btn" onclick="fecharModal('modal-rec')">Cancelar</button><button
+          class="btn primary" onclick="salvarRec()">Salvar</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR META -->
+  <div id="modal-meta" class="modal-bg">
+    <div class="modal">
+      <div class="modal-header"><span class="modal-title">Editar meta</span><button class="btn ghost"
+          onclick="fecharModal('modal-meta')" style="font-size:18px;padding:4px 8px">✕</button></div>
+      <input type="hidden" id="em-id">
+      <div class="g2">
+        <div class="fg full"><label>Nome</label><input type="text" id="em-nome"></div>
+        <div class="fg"><label>Tipo</label><select id="em-tipo">
+            <option value="reserva">Reserva de emergência</option>
+            <option value="objetivo">Objetivo</option>
+          </select></div>
+        <div class="fg"><label>Valor atual (R$)</label><input type="number" id="em-atual" step="0.01" min="0"></div>
+        <div class="fg"><label>Meta total (R$)</label><input type="number" id="em-total" step="0.01" min="0"></div>
+        <div class="fg"><label>Contribuição mensal (R$)</label><input type="number" id="em-mensal" step="0.01" min="0">
+        </div>
+        <div class="fg"><label>Cor</label><input type="color" id="em-cor" style="padding:2px 4px;height:36px"></div>
+        <div class="fg full"><label>Prazo (opcional)</label><input type="date" id="em-prazo"></div>
+      </div>
+      <div id="em-alert" style="margin-bottom:8px"></div>
+      <div class="btn-row"><button class="btn" onclick="fecharModal('modal-meta')">Cancelar</button><button
+          class="btn primary" onclick="salvarMeta()">Salvar</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR PESSOA -->
+  <div id="modal-pessoa" class="modal-bg">
+    <div class="modal">
+      <div class="modal-header"><span class="modal-title">Editar pessoa</span><button class="btn ghost"
+          onclick="fecharModal('modal-pessoa')" style="font-size:18px;padding:4px 8px">✕</button></div>
+      <input type="hidden" id="ep-id">
+      <div class="g2">
+        <div class="fg full"><label>Nome</label><input type="text" id="ep-nome"></div>
+        <div class="fg full"><label>Email</label><input type="email" id="ep-email"
+            placeholder="email@exemplo.com (opcional)"></div>
+        <div class="fg"><label>Cor</label><input type="color" id="ep-cor" style="padding:2px 4px;height:36px"></div>
+      </div>
+      <div id="ep-alert" style="margin-bottom:8px"></div>
+      <div class="btn-row"><button class="btn" onclick="fecharModal('modal-pessoa')">Cancelar</button><button
+          class="btn primary" onclick="salvarPessoa()">Salvar</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR CATEGORIA -->
+  <div id="modal-cat" class="modal-bg">
+    <div class="modal">
+      <div class="modal-header"><span class="modal-title">Editar categoria</span><button class="btn ghost"
+          onclick="fecharModal('modal-cat')" style="font-size:18px;padding:4px 8px">✕</button></div>
+      <input type="hidden" id="ecat-id">
+      <div class="g2">
+        <div class="fg full"><label>Nome</label><input type="text" id="ecat-nome"></div>
+        <div class="fg"><label>Cor</label><input type="color" id="ecat-cor" style="padding:2px 4px;height:36px"></div>
+      </div>
+      <div id="ecat-alert" style="margin-bottom:8px"></div>
+      <div class="btn-row"><button class="btn" onclick="fecharModal('modal-cat')">Cancelar</button><button
+          class="btn primary" onclick="salvarCat()">Salvar</button></div>
+    </div>
+  </div>
+
   <script>
+
     // ════════════════════════════════════════════════════════════
     // CONFIGURAÇÃO — substitua com suas credenciais do Supabase
     // ════════════════════════════════════════════════════════════
@@ -1448,9 +1546,13 @@
     }
 
     // ── CARREGAR DADOS ──────────────────────────────────────────
+    function showLoading(show) {
+      var el = document.getElementById('loading-overlay');
+      if (el) el.className = show ? 'visible' : '';
+    }
+
     async function carregarDados() {
-      const loadEl = document.getElementById('loading');
-      if (loadEl) loadEl.style.display = 'flex';
+      showLoading(true);
       try {
         const uid = USER.id;
         const [txsR, cartoesR, contasR, recsR, metasR, catsR, orcsR, pessR, divsR, itensR] = await Promise.all([
@@ -1465,7 +1567,6 @@
           sb.from('divisoes').select('*').eq('owner_id', uid).order('data', { ascending: false }),
           sb.from('divisao_itens').select('*').eq('owner_id', uid),
         ]);
-
         S.txs = (txsR.data || []).map(t => ({ ...t, _date: toDate(t.data), valor: +t.valor }));
         S.cartoes = cartoesR.data || [];
         S.contas = (contasR.data || []).map(c => ({ ...c, saldo_inicial: +c.saldo_inicial }));
@@ -1477,17 +1578,16 @@
         S.pessoas = pessR.data || [];
         S.divisoes = (divsR.data || []).map(d => ({ ...d, valor_total: +d.valor_total }));
         S.divisaoItens = (itensR.data || []).map(i => ({ ...i, valor: +i.valor, pago: i.pago === true || i.pago === 'true' }));
-
-        // Se sem categorias, cria as padrão
         if (!S.cats.length) await criarCatsPadrao();
-
-        if (loadEl) loadEl.style.display = 'none';
+        showLoading(false);
         buildYearFilter();
-        go('dashboard');
         render();
       } catch (e) {
-        if (loadEl) loadEl.style.display = 'none';
-        document.getElementById('loading').innerHTML = `<div class="alert err">Erro ao carregar: ${h(e.message)} <button class="btn sm primary" onclick="carregarDados()" style="margin-left:8px">Tentar novamente</button></div>`;
+        showLoading(false);
+        const errEl = document.createElement('div');
+        errEl.className = 'alert err';
+        errEl.innerHTML = 'Erro ao carregar: ' + h(e.message) + ' <button class="btn sm primary" onclick="carregarDados()" style="margin-left:8px">Tentar novamente</button>';
+        document.querySelector('.content').prepend(errEl);
       }
     }
 
@@ -2574,7 +2674,6 @@
     document.getElementById('tx-data').value = new Date().toISOString().split('T')[0];
     document.getElementById('div-data').value = new Date().toISOString().split('T')[0];
     onTipoChange();
-    go('dashboard'); // ativa a página inicial
 
     // ════════════════════════════════════════════════════════════
     // EDIÇÃO COMPLETA — todas as entidades
@@ -2805,138 +2904,10 @@
 
     // ── ORÇAMENTO — edição inline já funciona via setBudget() ────
     // O input no renderBudgetList já chama setBudget() ao mudar
+    // Init
+    go('dashboard');
+
   </script>
-
-  <!-- MODAL: EDITAR CONTA -->
-  <div id="modal-conta" class="modal-bg">
-    <div class="modal">
-      <div class="modal-header"><span class="modal-title">Editar conta</span><button class="btn ghost"
-          onclick="fecharModal('modal-conta')" style="font-size:18px;padding:4px 8px">✕</button></div>
-      <input type="hidden" id="ec-id">
-      <div class="g2">
-        <div class="fg full"><label>Nome</label><input type="text" id="ec-nome"></div>
-        <div class="fg"><label>Tipo</label>
-          <select id="ec-tipo">
-            <option value="corrente">Conta corrente</option>
-            <option value="digital">Digital</option>
-            <option value="poupanca">Poupança</option>
-            <option value="carteira">Carteira</option>
-          </select>
-        </div>
-        <div class="fg"><label>Saldo inicial (R$)</label><input type="number" id="ec-saldo" step="0.01"></div>
-        <div class="fg"><label>Cor</label><input type="color" id="ec-cor" style="padding:2px 4px;height:36px"></div>
-      </div>
-      <div id="ec-alert" style="margin-bottom:8px"></div>
-      <div class="btn-row"><button class="btn" onclick="fecharModal('modal-conta')">Cancelar</button><button
-          class="btn primary" onclick="salvarConta()">Salvar</button></div>
-    </div>
-  </div>
-
-  <!-- MODAL: EDITAR CARTÃO -->
-  <div id="modal-cartao" class="modal-bg">
-    <div class="modal">
-      <div class="modal-header"><span class="modal-title">Editar cartão</span><button class="btn ghost"
-          onclick="fecharModal('modal-cartao')" style="font-size:18px;padding:4px 8px">✕</button></div>
-      <input type="hidden" id="ecar-id">
-      <div class="g2">
-        <div class="fg full"><label>Nome</label><input type="text" id="ecar-nome"></div>
-        <div class="fg"><label>Fechamento (dia)</label><input type="number" id="ecar-fecha" min="1" max="31"></div>
-        <div class="fg"><label>Vencimento (dia)</label><input type="number" id="ecar-vence" min="1" max="31"></div>
-        <div class="fg"><label>Limite (R$)</label><input type="number" id="ecar-limite" min="0"></div>
-        <div class="fg"><label>Cor</label><input type="color" id="ecar-cor" style="padding:2px 4px;height:36px"></div>
-      </div>
-      <div id="ecar-alert" style="margin-bottom:8px"></div>
-      <div class="btn-row"><button class="btn" onclick="fecharModal('modal-cartao')">Cancelar</button><button
-          class="btn primary" onclick="salvarCartao()">Salvar</button></div>
-    </div>
-  </div>
-
-  <!-- MODAL: EDITAR RECORRENTE -->
-  <div id="modal-rec" class="modal-bg">
-    <div class="modal">
-      <div class="modal-header"><span class="modal-title">Editar recorrente</span><button class="btn ghost"
-          onclick="fecharModal('modal-rec')" style="font-size:18px;padding:4px 8px">✕</button></div>
-      <input type="hidden" id="er-id">
-      <div class="g2">
-        <div class="fg full"><label>Descrição</label><input type="text" id="er-desc"></div>
-        <div class="fg"><label>Tipo</label>
-          <select id="er-tipo">
-            <option value="entrada">Entrada</option>
-            <option value="saida">Saída</option>
-            <option value="cartao">Cartão</option>
-          </select>
-        </div>
-        <div class="fg"><label>Valor (R$)</label><input type="number" id="er-valor" step="0.01" min="0"></div>
-        <div class="fg"><label>Categoria</label><select id="er-cat"></select></div>
-        <div class="fg"><label>Dia do mês</label><input type="number" id="er-dia" min="1" max="31"></div>
-        <div class="fg"><label>Conta/Cartão</label><select id="er-conta"></select></div>
-      </div>
-      <div id="er-alert" style="margin-bottom:8px"></div>
-      <div class="btn-row"><button class="btn" onclick="fecharModal('modal-rec')">Cancelar</button><button
-          class="btn primary" onclick="salvarRec()">Salvar</button></div>
-    </div>
-  </div>
-
-  <!-- MODAL: EDITAR META -->
-  <div id="modal-meta" class="modal-bg">
-    <div class="modal">
-      <div class="modal-header"><span class="modal-title">Editar meta</span><button class="btn ghost"
-          onclick="fecharModal('modal-meta')" style="font-size:18px;padding:4px 8px">✕</button></div>
-      <input type="hidden" id="em-id">
-      <div class="g2">
-        <div class="fg full"><label>Nome</label><input type="text" id="em-nome"></div>
-        <div class="fg"><label>Tipo</label><select id="em-tipo">
-            <option value="reserva">Reserva de emergência</option>
-            <option value="objetivo">Objetivo</option>
-          </select></div>
-        <div class="fg"><label>Valor atual (R$)</label><input type="number" id="em-atual" step="0.01" min="0"></div>
-        <div class="fg"><label>Meta total (R$)</label><input type="number" id="em-total" step="0.01" min="0"></div>
-        <div class="fg"><label>Contribuição mensal (R$)</label><input type="number" id="em-mensal" step="0.01" min="0">
-        </div>
-        <div class="fg"><label>Cor</label><input type="color" id="em-cor" style="padding:2px 4px;height:36px"></div>
-        <div class="fg full"><label>Prazo (opcional)</label><input type="date" id="em-prazo"></div>
-      </div>
-      <div id="em-alert" style="margin-bottom:8px"></div>
-      <div class="btn-row"><button class="btn" onclick="fecharModal('modal-meta')">Cancelar</button><button
-          class="btn primary" onclick="salvarMeta()">Salvar</button></div>
-    </div>
-  </div>
-
-  <!-- MODAL: EDITAR PESSOA -->
-  <div id="modal-pessoa" class="modal-bg">
-    <div class="modal">
-      <div class="modal-header"><span class="modal-title">Editar pessoa</span><button class="btn ghost"
-          onclick="fecharModal('modal-pessoa')" style="font-size:18px;padding:4px 8px">✕</button></div>
-      <input type="hidden" id="ep-id">
-      <div class="g2">
-        <div class="fg full"><label>Nome</label><input type="text" id="ep-nome"></div>
-        <div class="fg full"><label>Email (para acesso ao portal)</label><input type="email" id="ep-email"
-            placeholder="email@exemplo.com (opcional)"></div>
-        <div class="fg"><label>Cor</label><input type="color" id="ep-cor" style="padding:2px 4px;height:36px"></div>
-      </div>
-      <div id="ep-alert" style="margin-bottom:8px"></div>
-      <div class="btn-row"><button class="btn" onclick="fecharModal('modal-pessoa')">Cancelar</button><button
-          class="btn primary" onclick="salvarPessoa()">Salvar</button></div>
-    </div>
-  </div>
-
-  <!-- MODAL: EDITAR CATEGORIA -->
-  <div id="modal-cat" class="modal-bg">
-    <div class="modal">
-      <div class="modal-header"><span class="modal-title">Editar categoria</span><button class="btn ghost"
-          onclick="fecharModal('modal-cat')" style="font-size:18px;padding:4px 8px">✕</button></div>
-      <input type="hidden" id="ecat-id">
-      <div class="g2">
-        <div class="fg full"><label>Nome</label><input type="text" id="ecat-nome"></div>
-        <div class="fg"><label>Cor</label><input type="color" id="ecat-cor" style="padding:2px 4px;height:36px"></div>
-      </div>
-      <div id="ecat-alert" style="margin-bottom:8px"></div>
-      <div class="btn-row"><button class="btn" onclick="fecharModal('modal-cat')">Cancelar</button><button
-          class="btn primary" onclick="salvarCat()">Salvar</button></div>
-    </div>
-  </div>
-
-  <!-- MODAL: EDITAR ORÇAMENTO em linha — sem modal, já é inline -->
 </body>
 
 </html>

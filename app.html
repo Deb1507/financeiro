@@ -1469,6 +1469,7 @@
     const SUPABASE_URL = 'https://jkxnqvdlgrtvuuqnhcpa.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpreG5xdmRsZ3J0dnV1cW5oY3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDg3ODUsImV4cCI6MjA5NjA4NDc4NX0.C9LnJvJWGUySgbiMgVfDshUh4MCAt58uF9AAAkZ6FcM';
 
+
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const MOS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -1806,6 +1807,17 @@
       renderRecCards(); renderMetasCards(); renderOrcMensal(); renderOrcAnual();
       renderCatList(); renderBudgetList(); renderPessCards();
       renderDivisoes(); renderExtrato(); renderSelects();
+      // Popular seletores dos formulários (somente se ainda vazios)
+      const grids = [
+        ['cnt-banco-grid', 'cnt-banco', '', popularGridBanco],
+        ['c-banco-grid', 'c-banco', '', popularGridBanco],
+        ['p-avatar-grid', 'p-avatar', '', popularGridAvatar],
+        ['new-cat-icone-grid', 'new-cat-icone', '📝', popularGridIcone],
+      ];
+      grids.forEach(([gid, hid, def, fn]) => {
+        const el = document.getElementById(gid);
+        if (el && !el.innerHTML) fn(gid, hid, def);
+      });
     }
 
     function monthTxs(m, y) {

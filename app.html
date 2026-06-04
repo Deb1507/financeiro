@@ -1485,6 +1485,131 @@
       { slug: 'outros', nome: 'Outros', cor: '#888780' },
     ];
 
+
+    // ════════════════════════════════════════════════════════════
+    // BANCOS, ÍCONES E AVATARES
+    // ════════════════════════════════════════════════════════════
+    const BANCOS = [
+      { slug: 'nubank', nome: 'Nubank', cor: '#820AD1', letra: 'N' },
+      { slug: 'itau', nome: 'Itaú', cor: '#EC7000', letra: 'I' },
+      { slug: 'bradesco', nome: 'Bradesco', cor: '#CC092F', letra: 'B' },
+      { slug: 'santander', nome: 'Santander', cor: '#EC0000', letra: 'S' },
+      { slug: 'caixa', nome: 'Caixa', cor: '#1F6FB2', letra: 'C' },
+      { slug: 'bb', nome: 'Banco do Brasil', cor: '#FAE128', letra: 'BB', corTexto: '#003DA5' },
+      { slug: 'inter', nome: 'Inter', cor: '#FF7A00', letra: 'I' },
+      { slug: 'c6', nome: 'C6 Bank', cor: '#242424', letra: 'C6' },
+      { slug: 'sicredi', nome: 'Sicredi', cor: '#3FA535', letra: 'S' },
+      { slug: 'sicoob', nome: 'Sicoob', cor: '#00AE9D', letra: 'S' },
+      { slug: 'btg', nome: 'BTG Pactual', cor: '#001E50', letra: 'BTG' },
+      { slug: 'xp', nome: 'XP', cor: '#000000', letra: 'XP' },
+      { slug: 'picpay', nome: 'PicPay', cor: '#21C25E', letra: 'P' },
+      { slug: 'mercadopago', nome: 'Mercado Pago', cor: '#009EE3', letra: 'MP' },
+      { slug: 'original', nome: 'Original', cor: '#008539', letra: 'O' },
+      { slug: 'next', nome: 'Next', cor: '#00FF5F', letra: 'N', corTexto: '#000' },
+      { slug: 'neon', nome: 'Neon', cor: '#00DBFF', letra: 'N', corTexto: '#000' },
+      { slug: 'pagbank', nome: 'PagBank', cor: '#FFC600', letra: 'PB', corTexto: '#000' },
+      { slug: 'willbank', nome: 'Will Bank', cor: '#39FF14', letra: 'W', corTexto: '#000' },
+      { slug: 'stone', nome: 'Stone', cor: '#00B388', letra: 'S' },
+      { slug: 'outro', nome: 'Outro', cor: '#888780', letra: '?' },
+    ];
+    function bancoBySlug(slug) {
+      return BANCOS.find(b => b.slug === slug) || null;
+    }
+    function bancoLogoHTML(slug, size) {
+      const sz = size || 32;
+      const b = bancoBySlug(slug);
+      if (!b) {
+        return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:#E8EAED;color:#9CA3AF;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:${Math.round(sz * 0.4)}px;flex-shrink:0">?</div>`;
+      }
+      const fontSize = b.letra.length > 2 ? Math.round(sz * 0.32) : Math.round(sz * 0.42);
+      const corTexto = b.corTexto || '#fff';
+      return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${b.cor};color:${corTexto};display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:${fontSize}px;letter-spacing:-0.5px;flex-shrink:0">${h(b.letra)}</div>`;
+    }
+
+    const ICONES_CAT = [
+      '🍔', '🍕', '🍣', '☕', '🛒', '🍷',
+      '🚗', '⛽', '🚕', '🚌', '✈️', '🚲',
+      '🏠', '💡', '🛋️', '🔧', '🧹', '📦',
+      '💊', '🏥', '💉', '🦷', '🧘', '💪',
+      '🎮', '🎬', '🎵', '🎨', '📚', '🏖️',
+      '👕', '👗', '👟', '👜', '💄', '💅',
+      '📺', '📱', '💻', '🎧', '🔌', '📡',
+      '🎁', '💰', '💳', '📈', '💼', '📊',
+      '🐶', '🐱', '🌱', '🎓', '✏️', '🔬',
+      '⚽', '🏋️', '🎯', '🚴', '🏊', '🎲',
+      '👶', '💍', '🎂', '🍼', '🪅', '🎈',
+      '📝', '📌', '💬', '📞', '✉️', '📅',
+    ];
+
+    const AVATARES_PESSOA = [
+      '', '👤', '👩', '👨', '👧', '👦', '👵', '👴',
+      '🧑', '👩‍🦰', '👨‍🦰', '👩‍🦱', '👨‍🦱', '👩‍🦳', '👨‍🦳', '🧔',
+      '👱‍♀️', '👱‍♂️', '🧓', '💁', '🙋', '🤷', '👰', '🤵',
+      '🦸', '🦹', '🧙', '😀', '😎', '🥰', '🤓', '😇',
+    ];
+
+    // Popula seletores
+    function popularGridBanco(gridId, hiddenId, selecionado) {
+      const grid = document.getElementById(gridId);
+      const hidden = document.getElementById(hiddenId);
+      if (!grid || !hidden) return;
+      hidden.value = selecionado || '';
+      grid.innerHTML = BANCOS.map(b => {
+        const sel = b.slug === selecionado ? ' sel' : '';
+        return `<div class="banco-opt${sel}" data-slug="${h(b.slug)}" onclick="selecionarBanco('${h(gridId)}','${h(hiddenId)}','${h(b.slug)}')">
+      ${bancoLogoHTML(b.slug, 32)}
+      <span class="banco-opt-nome">${h(b.nome)}</span>
+    </div>`;
+      }).join('');
+    }
+    function selecionarBanco(gridId, hiddenId, slug) {
+      document.getElementById(hiddenId).value = slug;
+      const grid = document.getElementById(gridId);
+      if (grid) grid.querySelectorAll('.banco-opt').forEach(el => el.classList.toggle('sel', el.dataset.slug === slug));
+    }
+
+    function popularGridIcone(gridId, hiddenId, selecionado) {
+      const grid = document.getElementById(gridId);
+      const hidden = document.getElementById(hiddenId);
+      if (!grid || !hidden) return;
+      hidden.value = selecionado || '📝';
+      grid.innerHTML = ICONES_CAT.map(ic => {
+        const sel = ic === (selecionado || '📝') ? ' sel' : '';
+        return `<div class="icon-opt${sel}" data-ic="${h(ic)}" onclick="selecionarIcone('${h(gridId)}','${h(hiddenId)}','${h(ic)}')">${ic}</div>`;
+      }).join('');
+    }
+    function selecionarIcone(gridId, hiddenId, ic) {
+      document.getElementById(hiddenId).value = ic;
+      const grid = document.getElementById(gridId);
+      if (grid) grid.querySelectorAll('.icon-opt').forEach(el => el.classList.toggle('sel', el.dataset.ic === ic));
+    }
+
+    function popularGridAvatar(gridId, hiddenId, selecionado) {
+      const grid = document.getElementById(gridId);
+      const hidden = document.getElementById(hiddenId);
+      if (!grid || !hidden) return;
+      hidden.value = selecionado || '';
+      grid.innerHTML = AVATARES_PESSOA.map(av => {
+        const sel = av === (selecionado || '') ? ' sel' : '';
+        const conteudo = av === '' ? '<span style="font-size:9px;color:#888;font-weight:600">AB</span>' : av;
+        return `<div class="icon-opt${sel}" data-av="${h(av)}" onclick="selecionarAvatar('${h(gridId)}','${h(hiddenId)}','${h(av)}')">${conteudo}</div>`;
+      }).join('');
+    }
+    function selecionarAvatar(gridId, hiddenId, av) {
+      document.getElementById(hiddenId).value = av;
+      const grid = document.getElementById(gridId);
+      if (grid) grid.querySelectorAll('.icon-opt').forEach(el => el.classList.toggle('sel', el.dataset.av === av));
+    }
+
+    // Avatar da pessoa (emoji ou iniciais)
+    function pessoaAvatarHTML(p, size) {
+      const sz = size || 32;
+      if (p && p.avatar && p.avatar.trim()) {
+        return `<div class="pessoa-avatar" style="background:${p.cor}22;width:${sz}px;height:${sz}px;font-size:${Math.round(sz * 0.55)}px">${p.avatar}</div>`;
+      }
+      return `<div class="pessoa-avatar" style="background:${p.cor};width:${sz}px;height:${sz}px;font-size:${Math.round(sz * 0.4)}px;color:#fff">${h(iniciais(p.nome))}</div>`;
+    }
+
     // ── ESTADO ──────────────────────────────────────────────────
     let USER = null;
     let S = {
@@ -1546,60 +1671,47 @@
     }
 
     // ── CARREGAR DADOS ──────────────────────────────────────────
-    function showLoading(show) {
+    function showLoading(show, msg) {
       var el = document.getElementById('loading-overlay');
-      if (el) el.className = show ? 'visible' : '';
+      if (!el) return;
+      if (show) {
+        el.innerHTML = '<div class="spinner"></div> ' + (msg || 'Carregando...');
+        el.className = 'visible';
+      } else {
+        el.className = '';
+      }
+    }
+
+    // Acorda o banco Supabase se estiver hibernando (plano gratuito dorme após 7 dias)
+    async function wakeUpBanco() {
+      try {
+        await sb.from('profiles').select('id').limit(1).maybeSingle();
+      } catch (e) {
+        // ignora — só queremos acordar o banco
+      }
     }
 
     async function carregarDados() {
-      console.log('[financeiro] carregarDados iniciado');
-      showLoading(true);
+      showLoading(true, 'Conectando...');
       try {
+        // Acorda o banco antes (plano gratuito hiberna após 7 dias inativos)
+        await wakeUpBanco();
+        showLoading(true, 'Carregando seus dados...');
+
         const uid = USER.id;
-        console.log('[financeiro] uid:', uid);
+        const [txsR, cartoesR, contasR, recsR, metasR, catsR, orcsR, pessR, divsR, itensR] = await Promise.all([
+          sb.from('transacoes').select('*').eq('owner_id', uid).order('data', { ascending: false }),
+          sb.from('cartoes').select('*').eq('owner_id', uid),
+          sb.from('contas').select('*').eq('owner_id', uid),
+          sb.from('recorrentes').select('*').eq('owner_id', uid),
+          sb.from('metas').select('*').eq('owner_id', uid),
+          sb.from('categorias').select('*').eq('owner_id', uid).order('nome'),
+          sb.from('orcamentos').select('*').eq('owner_id', uid),
+          sb.from('pessoas').select('*').eq('owner_id', uid).eq('ativo', true),
+          sb.from('divisoes').select('*').eq('owner_id', uid).order('data', { ascending: false }),
+          sb.from('divisao_itens').select('*').eq('owner_id', uid),
+        ]);
 
-        // Busca tabela por tabela para identificar qual trava
-        console.log('[financeiro] buscando transacoes...');
-        const txsR = await sb.from('transacoes').select('*').eq('owner_id', uid).order('data', { ascending: false });
-        console.log('[financeiro] transacoes ok, erro:', txsR.error);
-
-        console.log('[financeiro] buscando cartoes...');
-        const cartoesR = await sb.from('cartoes').select('*').eq('owner_id', uid);
-        console.log('[financeiro] cartoes ok, erro:', cartoesR.error);
-
-        console.log('[financeiro] buscando contas...');
-        const contasR = await sb.from('contas').select('*').eq('owner_id', uid);
-        console.log('[financeiro] contas ok, erro:', contasR.error);
-
-        console.log('[financeiro] buscando recorrentes...');
-        const recsR = await sb.from('recorrentes').select('*').eq('owner_id', uid);
-        console.log('[financeiro] recorrentes ok, erro:', recsR.error);
-
-        console.log('[financeiro] buscando metas...');
-        const metasR = await sb.from('metas').select('*').eq('owner_id', uid);
-        console.log('[financeiro] metas ok, erro:', metasR.error);
-
-        console.log('[financeiro] buscando categorias...');
-        const catsR = await sb.from('categorias').select('*').eq('owner_id', uid).order('nome');
-        console.log('[financeiro] categorias ok, erro:', catsR.error);
-
-        console.log('[financeiro] buscando orcamentos...');
-        const orcsR = await sb.from('orcamentos').select('*').eq('owner_id', uid);
-        console.log('[financeiro] orcamentos ok, erro:', orcsR.error);
-
-        console.log('[financeiro] buscando pessoas...');
-        const pessR = await sb.from('pessoas').select('*').eq('owner_id', uid).eq('ativo', true);
-        console.log('[financeiro] pessoas ok, erro:', pessR.error);
-
-        console.log('[financeiro] buscando divisoes...');
-        const divsR = await sb.from('divisoes').select('*').eq('owner_id', uid).order('data', { ascending: false });
-        console.log('[financeiro] divisoes ok, erro:', divsR.error);
-
-        console.log('[financeiro] buscando divisao_itens...');
-        const itensR = await sb.from('divisao_itens').select('*').eq('owner_id', uid);
-        console.log('[financeiro] divisao_itens ok, erro:', itensR.error);
-
-        console.log('[financeiro] processando dados...');
         S.txs = (txsR.data || []).map(t => ({ ...t, _date: toDate(t.data), valor: +t.valor }));
         S.cartoes = cartoesR.data || [];
         S.contas = (contasR.data || []).map(c => ({ ...c, saldo_inicial: +c.saldo_inicial }));
@@ -1612,35 +1724,25 @@
         S.divisoes = (divsR.data || []).map(d => ({ ...d, valor_total: +d.valor_total }));
         S.divisaoItens = (itensR.data || []).map(i => ({ ...i, valor: +i.valor, pago: i.pago === true || i.pago === 'true' }));
 
-        console.log('[financeiro] dados processados. cats:', S.cats.length);
-        if (!S.cats.length) {
-          console.log('[financeiro] criando categorias padrao...');
-          await criarCatsPadrao();
-          console.log('[financeiro] categorias criadas:', S.cats.length);
-        }
+        if (!S.cats.length) await criarCatsPadrao();
 
-        console.log('[financeiro] finalizando, chamando showLoading(false)...');
         showLoading(false);
         buildYearFilter();
         go('dashboard');
         render();
-        console.log('[financeiro] render() concluido');
 
       } catch (e) {
         showLoading(false);
-        console.error('[financeiro] ERRO em carregarDados:', e);
-        console.error('[financeiro] stack:', e.stack);
-        setTimeout(function () {
-          var content = document.querySelector('.content');
-          if (content) {
-            var errEl = document.createElement('div');
-            errEl.className = 'alert err';
-            errEl.style.cssText = 'position:relative;z-index:1;margin:12px';
-            errEl.innerHTML = 'Erro ao carregar: ' + h(String(e.message || e)) +
-              ' <button class="btn sm primary" onclick="carregarDados()" style="margin-left:8px">Tentar novamente</button>';
-            content.prepend(errEl);
-          }
-        }, 100);
+        console.error('[financeiro] erro:', e);
+        var content = document.querySelector('.content');
+        if (content) {
+          var errEl = document.createElement('div');
+          errEl.className = 'alert err';
+          errEl.style.cssText = 'position:relative;z-index:1;margin:12px 0';
+          errEl.innerHTML = 'Erro ao carregar: ' + h(String(e.message || e)) +
+            ' <button class="btn sm primary" onclick="carregarDados()" style="margin-left:8px">Tentar novamente</button>';
+          content.prepend(errEl);
+        }
       }
     }
 
@@ -1893,7 +1995,7 @@
       const pess = t.pessoa_id ? pessById(t.pessoa_id) : null;
       const pessBadge = pess ? `<span class="pessoa-tag" style="background:${pess.cor}22;color:${pess.cor}">${h(iniciais(pess.nome))}</span>` : '';
       return `<div class="tx-item">
-    <span class="tx-dot" style="background:${cat.cor}"></span>
+    <span style="font-size:16px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;background:${cat.cor}22;border-radius:50%;flex-shrink:0">${cat.icone || '📝'}</span>
     <div style="flex:1;min-width:0"><div class="tx-desc">${h(t.descricao)}</div>
     <div class="tx-meta">${h(cat.nome)} · ${h(fmtData(t.data))}</div></div>
     ${pessBadge}<span class="badge ${cls}">${lbl}</span>${pBadge}
@@ -1983,7 +2085,7 @@
       </div>`: '';
         return `<div style="background:var(--bg);border-radius:var(--rs);padding:14px;margin-bottom:10px;border:1px solid var(--border)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-weight:600;font-size:13px"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${c.cor};margin-right:5px"></span>${h(c.nome)}</span>
+        <span style="font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:8px">${c.banco ? bancoLogoHTML(c.banco, 26) : `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${c.cor}"></span>`}${h(c.nome)}</span>
         <button class="btn ghost sm" onclick="editarCartao('${h(c.id)}')" style="padding:4px 7px">✏️</button>
         <button class="btn danger" onclick="removeCartao('${h(c.id)}')">✕</button>
       </div>
@@ -2110,7 +2212,7 @@
         const pend = divs.filter(i => !i.pago).reduce((a, i) => a + i.valor, 0);
         const temLogin = !!p.email;
         return `<div class="pessoa-card">
-      <div class="pessoa-avatar" style="background:${p.cor};width:36px;height:36px;font-size:14px">${h(iniciais(p.nome))}</div>
+      ${pessoaAvatarHTML(p, 36)}
       <div style="flex:1">
         <div style="font-size:13px;font-weight:600">${h(p.nome)}</div>
         <div style="font-size:10px;color:var(--muted)">${temLogin ? `📧 ${h(p.email)}` : 'Sem acesso ao portal'}</div>
@@ -2163,7 +2265,7 @@
           const pessPend = info.valor - info.pago;
           const pessPago = pessPend < 0.01;
           return `<div class="div-item-row${pessPago ? ' pago' : ''}">
-          <div class="pessoa-avatar" style="background:${pess.cor};width:26px;height:26px;font-size:10px">${h(iniciais(pess.nome))}</div>
+          ${pessoaAvatarHTML(pess, 26)}
           <div style="flex:1"><div style="font-size:12px;font-weight:500">${h(pess.nome)}</div>
           ${pessPago ? '<div style="font-size:10px;color:var(--green)">✓ Pago</div>' : `<div style="font-size:10px;color:var(--muted)">Deve ${h(fmtBRL(pessPend))}</div>`}</div>
           <span style="font-size:12px;font-weight:700">${h(fmtBRL(info.valor))}</span>
@@ -2483,11 +2585,13 @@
       const tipo = document.getElementById('cnt-tipo').value;
       const si = parseFloat(document.getElementById('cnt-saldo').value) || 0;
       const cor = document.getElementById('cnt-cor').value;
+      const banco = document.getElementById('cnt-banco').value || null;
       if (!nome) { showAlert('conta-alert', 'Informe o nome', 'err'); return; }
-      const { data, error } = await sb.from('contas').insert({ owner_id: USER.id, nome, tipo, saldo_inicial: si, cor }).select().single();
+      const { data, error } = await sb.from('contas').insert({ owner_id: USER.id, nome, tipo, saldo_inicial: si, cor, banco }).select().single();
       if (error) { showAlert('conta-alert', 'Erro: ' + error.message, 'err'); return; }
       S.contas.push({ ...data, saldo_inicial: +data.saldo_inicial });
       render();['cnt-nome', 'cnt-saldo'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('cnt-banco').value = ''; popularGridBanco('cnt-banco-grid', 'cnt-banco', '');
       showAlert('conta-alert', 'Conta cadastrada!', 'ok'); setTimeout(() => showTab('contas-lista'), 1500);
     }
     async function removeConta(id) {
@@ -2503,11 +2607,13 @@
       const vencimento = +document.getElementById('c-vence').value;
       const limite = parseFloat(document.getElementById('c-limite').value) || null;
       const cor = document.getElementById('c-cor').value;
+      const banco = document.getElementById('c-banco').value || null;
       if (!nome || !fechamento || !vencimento) { showAlert('cartao-alert', 'Preencha nome, fechamento e vencimento', 'err'); return; }
-      const { data, error } = await sb.from('cartoes').insert({ owner_id: USER.id, nome, fechamento, vencimento, limite, cor }).select().single();
+      const { data, error } = await sb.from('cartoes').insert({ owner_id: USER.id, nome, fechamento, vencimento, limite, cor, banco }).select().single();
       if (error) { showAlert('cartao-alert', 'Erro: ' + error.message, 'err'); return; }
       S.cartoes.push(data); render();
       ['c-nome', 'c-fecha', 'c-vence', 'c-limite'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('c-banco').value = ''; popularGridBanco('c-banco-grid', 'c-banco', '');
       showAlert('cartao-alert', 'Cartão cadastrado!', 'ok'); setTimeout(() => showTab('cart-lista'), 1500);
     }
     async function removeCartao(id) {
@@ -2573,12 +2679,16 @@
     async function addCat() {
       const nome = document.getElementById('new-cat-nome').value.trim();
       const cor = document.getElementById('new-cat-cor').value;
+      const icone = document.getElementById('new-cat-icone').value || '📝';
       if (!nome) return;
       const slug = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
       if (S.cats.find(c => c.slug === slug)) { showAlert('', 'Categoria já existe', 'err'); return; }
-      const { data, error } = await sb.from('categorias').insert({ owner_id: USER.id, slug, nome, cor }).select().single();
+      const { data, error } = await sb.from('categorias').insert({ owner_id: USER.id, slug, nome, cor, icone }).select().single();
       if (error) return;
-      S.cats.push(data); render(); document.getElementById('new-cat-nome').value = '';
+      S.cats.push(data); render();
+      document.getElementById('new-cat-nome').value = '';
+      document.getElementById('new-cat-icone').value = '📝';
+      popularGridIcone('new-cat-icone-grid', 'new-cat-icone', '📝');
     }
     async function removeCat(id) {
       if (!confirm('Remover categoria?')) return;
@@ -2601,11 +2711,13 @@
       const nome = document.getElementById('p-nome').value.trim();
       const email = document.getElementById('p-email').value.trim() || null;
       const cor = document.getElementById('p-cor').value;
+      const avatar = document.getElementById('p-avatar').value || null;
       if (!nome) { showAlert('pess-alert', 'Informe o nome', 'err'); return; }
-      const { data, error } = await sb.from('pessoas').insert({ owner_id: USER.id, nome, email, cor, ativo: true }).select().single();
+      const { data, error } = await sb.from('pessoas').insert({ owner_id: USER.id, nome, email, cor, avatar, ativo: true }).select().single();
       if (error) { showAlert('pess-alert', 'Erro: ' + error.message, 'err'); return; }
       S.pessoas.push(data); render();
       ['p-nome', 'p-email'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('p-avatar').value = ''; popularGridAvatar('p-avatar-grid', 'p-avatar', '');
       showAlert('pess-alert', 'Pessoa cadastrada!', 'ok'); setTimeout(() => showTab('pess-lista'), 1500);
     }
     async function removePessoa(id) {
@@ -2946,18 +3058,18 @@
       const id = document.getElementById('ecat-id').value;
       const nome = document.getElementById('ecat-nome').value.trim();
       const cor = document.getElementById('ecat-cor').value;
+      const icone = document.getElementById('ecat-icone').value || '📝';
       if (!nome) { showAlert('ecat-alert', 'Informe o nome', 'err', 0); return; }
       if (!id) {
-        // Criação (já existe addCat, mas por consistência)
         const slug = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-        const { data, error } = await sb.from('categorias').insert({ owner_id: USER.id, slug, nome, cor }).select().single();
+        const { data, error } = await sb.from('categorias').insert({ owner_id: USER.id, slug, nome, cor, icone }).select().single();
         if (error) { showAlert('ecat-alert', error.message, 'err', 0); return; }
         S.cats.push(data);
       } else {
-        const { error } = await sb.from('categorias').update({ nome, cor }).eq('id', id);
+        const { error } = await sb.from('categorias').update({ nome, cor, icone }).eq('id', id);
         if (error) { showAlert('ecat-alert', error.message, 'err', 0); return; }
         const idx = S.cats.findIndex(x => x.id === id);
-        if (idx !== -1) S.cats[idx] = { ...S.cats[idx], nome, cor };
+        if (idx !== -1) S.cats[idx] = { ...S.cats[idx], nome, cor, icone };
       }
       fecharModal('modal-cat'); render();
       ['ecat-id', 'ecat-nome'].forEach(x => document.getElementById(x).value = '');

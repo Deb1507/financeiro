@@ -852,6 +852,85 @@
         padding: 12px 12px 80px
       }
     }
+
+    /* SELETOR DE ÍCONE/EMOJI */
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--rs);
+      background: var(--bg)
+    }
+
+    .icon-opt {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: 6px;
+      background: var(--surface);
+      border: 2px solid transparent;
+      transition: all .1s;
+      user-select: none
+    }
+
+    .icon-opt:hover {
+      background: var(--green-l)
+    }
+
+    .icon-opt.sel {
+      border-color: var(--green);
+      background: var(--green-l)
+    }
+
+    /* SELETOR DE BANCO */
+    .banco-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+      gap: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--rs);
+      background: var(--bg)
+    }
+
+    .banco-opt {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 4px;
+      cursor: pointer;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 2px solid transparent;
+      transition: all .1s;
+      text-align: center
+    }
+
+    .banco-opt:hover {
+      background: var(--green-l)
+    }
+
+    .banco-opt.sel {
+      border-color: var(--green);
+      background: var(--green-l)
+    }
+
+    .banco-opt-nome {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.1
+    }
   </style>
 </head>
 
@@ -1135,6 +1214,10 @@
                   placeholder="email@exemplo.com (opcional)"></div>
               <div class="fg"><label>Cor</label><input type="color" id="p-cor" value="#378ADD"
                   style="padding:2px 4px;height:36px"></div>
+              <div class="fg full"><label>Avatar (vazio = usa iniciais)</label>
+                <input type="hidden" id="p-avatar" value="">
+                <div id="p-avatar-grid" class="icon-grid"></div>
+              </div>
             </div>
             <div class="alert info">O email é necessário para dar acesso ao portal da convidada.</div>
             <div class="btn-row" style="margin-top:10px"><button class="btn primary"
@@ -1171,6 +1254,10 @@
               <div class="fg"><label>Saldo inicial (R$)</label><input type="number" id="cnt-saldo" step="0.01"></div>
               <div class="fg"><label>Cor</label><input type="color" id="cnt-cor" value="#378ADD"
                   style="padding:2px 4px;height:36px"></div>
+              <div class="fg full"><label>Banco</label>
+                <input type="hidden" id="cnt-banco" value="">
+                <div id="cnt-banco-grid" class="banco-grid"></div>
+              </div>
             </div>
             <div class="btn-row"><button class="btn primary" onclick="addConta()">Cadastrar</button></div>
             <div id="conta-alert" style="margin-top:8px"></div>
@@ -1196,6 +1283,10 @@
               <div class="fg"><label>Limite (R$)</label><input type="number" id="c-limite" min="0"></div>
               <div class="fg"><label>Cor</label><input type="color" id="c-cor" value="#378ADD"
                   style="padding:2px 4px;height:36px"></div>
+              <div class="fg full"><label>Banco emissor</label>
+                <input type="hidden" id="c-banco" value="">
+                <div id="c-banco-grid" class="banco-grid"></div>
+              </div>
             </div>
             <div class="btn-row"><button class="btn primary" onclick="addCartao()">Cadastrar</button></div>
             <div id="cartao-alert" style="margin-top:8px"></div>
@@ -1290,11 +1381,14 @@
         <div class="card">
           <div class="card-title">Categorias</div>
           <div id="cat-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px"></div>
-          <div style="display:flex;gap:7px">
+          <div style="display:flex;gap:7px;margin-bottom:10px">
             <input type="text" id="new-cat-nome" placeholder="Nova categoria" style="flex:1">
             <input type="color" id="new-cat-cor" value="#1D9E75" style="width:38px;padding:2px 4px;height:36px">
             <button class="btn primary" onclick="addCat()">Adicionar</button>
           </div>
+          <label>Ícone</label>
+          <input type="hidden" id="new-cat-icone" value="📝">
+          <div id="new-cat-icone-grid" class="icon-grid"></div>
         </div>
         <div class="card">
           <div class="card-title">Metas de orçamento por categoria</div>
@@ -1352,6 +1446,10 @@
           </select></div>
         <div class="fg"><label>Saldo inicial (R$)</label><input type="number" id="ec-saldo" step="0.01"></div>
         <div class="fg"><label>Cor</label><input type="color" id="ec-cor" style="padding:2px 4px;height:36px"></div>
+        <div class="fg full"><label>Banco</label>
+          <input type="hidden" id="ec-banco" value="">
+          <div id="ec-banco-grid" class="banco-grid"></div>
+        </div>
       </div>
       <div id="ec-alert" style="margin-bottom:8px"></div>
       <div class="btn-row"><button class="btn" onclick="fecharModal('modal-conta')">Cancelar</button><button
@@ -1371,6 +1469,10 @@
         <div class="fg"><label>Vencimento (dia)</label><input type="number" id="ecar-vence" min="1" max="31"></div>
         <div class="fg"><label>Limite (R$)</label><input type="number" id="ecar-limite" min="0"></div>
         <div class="fg"><label>Cor</label><input type="color" id="ecar-cor" style="padding:2px 4px;height:36px"></div>
+        <div class="fg full"><label>Banco emissor</label>
+          <input type="hidden" id="ecar-banco" value="">
+          <div id="ecar-banco-grid" class="banco-grid"></div>
+        </div>
       </div>
       <div id="ecar-alert" style="margin-bottom:8px"></div>
       <div class="btn-row"><button class="btn" onclick="fecharModal('modal-cartao')">Cancelar</button><button
@@ -1438,6 +1540,10 @@
         <div class="fg full"><label>Email</label><input type="email" id="ep-email"
             placeholder="email@exemplo.com (opcional)"></div>
         <div class="fg"><label>Cor</label><input type="color" id="ep-cor" style="padding:2px 4px;height:36px"></div>
+        <div class="fg full"><label>Avatar (vazio = usa iniciais)</label>
+          <input type="hidden" id="ep-avatar" value="">
+          <div id="ep-avatar-grid" class="icon-grid"></div>
+        </div>
       </div>
       <div id="ep-alert" style="margin-bottom:8px"></div>
       <div class="btn-row"><button class="btn" onclick="fecharModal('modal-pessoa')">Cancelar</button><button
@@ -1454,6 +1560,10 @@
       <div class="g2">
         <div class="fg full"><label>Nome</label><input type="text" id="ecat-nome"></div>
         <div class="fg"><label>Cor</label><input type="color" id="ecat-cor" style="padding:2px 4px;height:36px"></div>
+        <div class="fg full"><label>Ícone</label>
+          <input type="hidden" id="ecat-icone" value="📝">
+          <div id="ecat-icone-grid" class="icon-grid"></div>
+        </div>
       </div>
       <div id="ecat-alert" style="margin-bottom:8px"></div>
       <div class="btn-row"><button class="btn" onclick="fecharModal('modal-cat')">Cancelar</button><button
@@ -1468,7 +1578,6 @@
     // ════════════════════════════════════════════════════════════
     const SUPABASE_URL = 'https://jkxnqvdlgrtvuuqnhcpa.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpreG5xdmRsZ3J0dnV1cW5oY3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDg3ODUsImV4cCI6MjA5NjA4NDc4NX0.C9LnJvJWGUySgbiMgVfDshUh4MCAt58uF9AAAkZ6FcM';
-
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 

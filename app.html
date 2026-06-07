@@ -1579,6 +1579,7 @@
     const SUPABASE_URL = 'https://jkxnqvdlgrtvuuqnhcpa.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpreG5xdmRsZ3J0dnV1cW5oY3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDg3ODUsImV4cCI6MjA5NjA4NDc4NX0.C9LnJvJWGUySgbiMgVfDshUh4MCAt58uF9AAAkZ6FcM';
 
+
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const MOS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -1873,6 +1874,7 @@
 
     // ── NAVEGAÇÃO ───────────────────────────────────────────────
     function go(id) {
+      if (id !== 'divisoes') divPessoas = [];  // limpa formulário em andamento
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('page-' + id)?.classList.add('active');
@@ -2197,7 +2199,7 @@
           const pess = pessById(pid); if (!pess) return '';
           return `<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px">
             <span style="display:flex;align-items:center;gap:5px">
-              <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:${pess.cor};color:#fff;font-size:9px;font-weight:700">${h(iniciais(pess.nome))}</span>
+              ${pessoaAvatarHTML(pess, 18)}
               <span style="color:var(--muted)">${h(pess.nome)}</span>
             </span>
             <span style="font-weight:700;color:var(--red)">${h(fmtBRL(val))}</span>
@@ -2439,7 +2441,7 @@
 
       el.innerHTML = `<div class="card">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <div class="pessoa-avatar" style="background:${pess.cor};width:36px;height:36px;font-size:14px">${h(iniciais(pess.nome))}</div>
+      ${pessoaAvatarHTML(pess, 36)}
       <div><div style="font-size:15px;font-weight:700">${h(pess.nome)}</div>
       <div style="font-size:11px;color:var(--muted)">${itens.length} item(ns) · Deve ${h(fmtBRL(totalPend))}</div></div>
     </div>
@@ -2592,36 +2594,49 @@
       const faturaEl = document.getElementById('tx-fatura');
       const dataBase = (tipo === 'cartao' && faturaEl && faturaEl.value) ? faturaEl.value : data;
       if (!desc || !valor || !dataBase) { showAlert('tx-alert', 'Preencha os campos obrigatórios', 'err'); return; }
+      // Validar transferência: origem e destino obrigatórios e diferentes
+      if (tipo === 'transferencia') {
+        if (!contaId || !contaDestId) { showAlert('tx-alert', 'Selecione conta origem e destino', 'err'); return; }
+        if (contaId === contaDestId) { showAlert('tx-alert', 'Conta origem e destino devem ser diferentes', 'err'); return; }
+      }
+      // Bloqueia duplo-click no botão
+      const btn = document.querySelector('button[onclick="addTx()"]');
+      if (btn) { if (btn.disabled) return; btn.disabled = true; }
 
-      const txs = [];
-      if (n > 1) {
-        const base = toDate(dataBase);
-        const vp = Math.round(valor / n * 100) / 100;
-        const gid = uuid();
-        for (let i = 0; i < n; i++) {
-          const d = new Date(base.getFullYear(), base.getMonth() + i, base.getDate());
+      try {
+        const txs = [];
+        if (n > 1) {
+          const base = toDate(dataBase);
+          const vp = Math.round(valor / n * 100) / 100;
+          const vUltima = Math.round((valor - vp * (n - 1)) * 100) / 100;  // absorve resto de centavos
+          const gid = uuid();
+          for (let i = 0; i < n; i++) {
+            const d = new Date(base.getFullYear(), base.getMonth() + i, base.getDate());
+            txs.push({
+              owner_id: USER.id, tipo, data: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'),
+              descricao: desc + ` (${i + 1}/${n})`, valor: (i === n - 1) ? vUltima : vp, categoria_id: catId, obs,
+              cartao_id: cartaoId, conta_id: contaId, conta_dest_id: contaDestId,
+              parcelas: n, parcela_num: i + 1, grupo_id: gid, rec_id: null, pessoa_id: pessoaId
+            });
+          }
+        } else {
           txs.push({
-            owner_id: USER.id, tipo, data: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'),
-            descricao: desc + ` (${i + 1}/${n})`, valor: vp, categoria_id: catId, obs,
+            owner_id: USER.id, tipo, data: dataBase, descricao: desc, valor, categoria_id: catId, obs,
             cartao_id: cartaoId, conta_id: contaId, conta_dest_id: contaDestId,
-            parcelas: n, parcela_num: i + 1, grupo_id: gid, rec_id: null, pessoa_id: pessoaId
+            parcelas: 1, parcela_num: 1, grupo_id: null, rec_id: null, pessoa_id: pessoaId
           });
         }
-      } else {
-        txs.push({
-          owner_id: USER.id, tipo, data: dataBase, descricao: desc, valor, categoria_id: catId, obs,
-          cartao_id: cartaoId, conta_id: contaId, conta_dest_id: contaDestId,
-          parcelas: 1, parcela_num: 1, grupo_id: null, rec_id: null, pessoa_id: pessoaId
-        });
+        const { data: saved, error } = await sb.from('transacoes').insert(txs).select();
+        if (error) { showAlert('tx-alert', 'Erro ao salvar: ' + error.message, 'err'); return; }
+        saved.forEach(t => S.txs.unshift({ ...t, _date: toDate(t.data), valor: +t.valor }));
+        buildYearFilter(); render();
+        ['tx-desc', 'tx-valor', 'tx-obs'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('tx-parcelas').value = '1';
+        document.getElementById('parcela-preview').innerHTML = '';
+        showAlert('tx-alert', n > 1 ? `${n} parcelas lançadas!` : 'Lançamento adicionado!', 'ok');
+      } finally {
+        if (btn) btn.disabled = false;
       }
-      const { data: saved, error } = await sb.from('transacoes').insert(txs).select();
-      if (error) { showAlert('tx-alert', 'Erro ao salvar: ' + error.message, 'err'); return; }
-      saved.forEach(t => S.txs.unshift({ ...t, _date: toDate(t.data), valor: +t.valor }));
-      buildYearFilter(); render();
-      ['tx-desc', 'tx-valor', 'tx-obs'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('tx-parcelas').value = '1';
-      document.getElementById('parcela-preview').innerHTML = '';
-      showAlert('tx-alert', n > 1 ? `${n} parcelas lançadas!` : 'Lançamento adicionado!', 'ok');
     }
 
     async function removeTx(id) {
@@ -2680,22 +2695,26 @@
       const contaDestId = tipo === 'transferencia' ? document.getElementById('edit-conta-dest').value || null : null;
       const pessoaId = document.getElementById('edit-pessoa').value || null;
       if (!desc || !valor || !data) { showAlert('edit-alert', 'Preencha os campos obrigatórios', 'err', 0); return; }
+      if (tipo === 'transferencia' && contaId && contaDestId && contaId === contaDestId) { showAlert('edit-alert', 'Conta origem e destino devem ser diferentes', 'err', 0); return; }
       const upd = { tipo, data, descricao: desc, valor, categoria_id: catId, obs, cartao_id: cartaoId, conta_id: contaId, conta_dest_id: contaDestId, pessoa_id: pessoaId };
       const { error } = await sb.from('transacoes').update(upd).eq('id', id);
       if (error) { showAlert('edit-alert', 'Erro: ' + error.message, 'err', 0); return; }
       const idx = S.txs.findIndex(x => x.id === id);
       if (idx !== -1) S.txs[idx] = { ...S.txs[idx], ...upd, _date: toDate(data) };
-      fecharModal('edit-modal'); render();
+      buildYearFilter(); fecharModal('edit-modal'); render();
     }
     async function editarGrupo(grupoId) {
-      const desc = document.getElementById('edit-desc').value.trim();
+      // Remove sufixo "(N/M)" se existir, para não duplicar
+      const descRaw = document.getElementById('edit-desc').value.trim();
+      const descBase = descRaw.replace(/\s*\(\d+\/\d+\)\s*$/, '');
       const catId = document.getElementById('edit-cat').value || null;
       const obs = document.getElementById('edit-obs').value.trim();
       const pessoaId = document.getElementById('edit-pessoa').value || null;
       const grupo = S.txs.filter(t => t.grupo_id === grupoId);
       for (const t of grupo) {
-        await sb.from('transacoes').update({ descricao: desc + ` (${t.parcela_num}/${t.parcelas})`, categoria_id: catId, obs, pessoa_id: pessoaId }).eq('id', t.id);
-        t.descricao = desc + ` (${t.parcela_num}/${t.parcelas})`; t.categoria_id = catId; t.obs = obs; t.pessoa_id = pessoaId;
+        const novaDesc = descBase + ` (${t.parcela_num}/${t.parcelas})`;
+        await sb.from('transacoes').update({ descricao: novaDesc, categoria_id: catId, obs, pessoa_id: pessoaId }).eq('id', t.id);
+        t.descricao = novaDesc; t.categoria_id = catId; t.obs = obs; t.pessoa_id = pessoaId;
       }
       fecharModal('edit-modal'); render();
     }
@@ -2899,30 +2918,38 @@
       if (!divPessoas.length) { showAlert('div-alert', 'Adicione pelo menos uma pessoa', 'err'); return; }
       const soma = divPessoas.reduce((a, dp) => a + dp.valor, 0);
       if (Math.abs(soma - valorTotal) > 0.05) { showAlert('div-alert', `Soma (${fmtBRL(soma)}) não bate com o total (${fmtBRL(valorTotal)})`, 'err'); return; }
+      const btnDiv = document.querySelector('button[onclick="salvarDivisao()"]');
+      if (btnDiv) { if (btnDiv.disabled) return; btnDiv.disabled = true; }
+      const reabilitar = () => { if (btnDiv) btnDiv.disabled = false; };
 
       const gid = uuid();
       const divisoes = [], allItens = [];
+      // Cálculo das parcelas com a última absorvendo resto de centavos
+      const vpDiv = Math.round(valorTotal / n * 100) / 100;
+      const vpUltimaDiv = Math.round((valorTotal - vpDiv * (n - 1)) * 100) / 100;
       for (let p = 1; p <= n; p++) {
         const d = toDate(data); d.setMonth(d.getMonth() + p - 1);
-        const vp = Math.round(valorTotal / n * 100) / 100;
+        const vpParcela = (p === n) ? vpUltimaDiv : vpDiv;
         const divId = uuid();
         divisoes.push({
           id: divId, owner_id: USER.id, descricao: n > 1 ? `${desc} (${p}/${n})` : desc,
           data: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'),
-          valor_total: vp, cartao_id: cartaoId, conta_id: contaId, categoria_id: catId, obs,
+          valor_total: vpParcela, cartao_id: cartaoId, conta_id: contaId, categoria_id: catId, obs,
           grupo_parcela_id: gid, parcelas: n, parcela_num: p
         });
         divPessoas.forEach(dp => {
+          const vDp = Math.round(dp.valor / n * 100) / 100;
+          const vDpUlt = Math.round((dp.valor - vDp * (n - 1)) * 100) / 100;
           allItens.push({
             id: uuid(), owner_id: USER.id, divisao_id: divId, pessoa_id: dp.pessoaId,
-            valor: Math.round(dp.valor / n * 100) / 100, pago: false
+            valor: (p === n) ? vDpUlt : vDp, pago: false
           });
         });
       }
       const { error: e1 } = await sb.from('divisoes').insert(divisoes);
-      if (e1) { showAlert('div-alert', 'Erro: ' + e1.message, 'err'); return; }
+      if (e1) { showAlert('div-alert', 'Erro: ' + e1.message, 'err'); reabilitar(); return; }
       const { error: e2 } = await sb.from('divisao_itens').insert(allItens);
-      if (e2) { showAlert('div-alert', 'Erro nos itens: ' + e2.message, 'err'); return; }
+      if (e2) { showAlert('div-alert', 'Erro nos itens: ' + e2.message, 'err'); reabilitar(); return; }
 
       divisoes.forEach(d => S.divisoes.unshift({ ...d, valor_total: +d.valor_total }));
       allItens.forEach(i => S.divisaoItens.push({ ...i, valor: +i.valor, pago: false }));
@@ -2988,6 +3015,7 @@
       document.getElementById('ec-saldo').value = c.saldo_inicial;
       document.getElementById('ec-cor').value = c.cor;
       document.getElementById('ec-alert').innerHTML = '';
+      popularGridBanco('ec-banco-grid', 'ec-banco', c.banco || '');
       _openModal('modal-conta');
     }
     async function salvarConta() {
@@ -2996,21 +3024,22 @@
       const tipo = document.getElementById('ec-tipo').value;
       const saldo = parseFloat(document.getElementById('ec-saldo').value) || 0;
       const cor = document.getElementById('ec-cor').value;
+      const banco = document.getElementById('ec-banco').value || null;
       if (!nome) { showAlert('ec-alert', 'Informe o nome', 'err', 0); return; }
-      // Se id vazio, é criação; senão é update
+      const payload = { nome, tipo, saldo_inicial: saldo, cor, banco };
       if (!id) {
-        const { data, error } = await sb.from('contas').insert({ owner_id: USER.id, nome, tipo, saldo_inicial: saldo, cor }).select().single();
+        const { data, error } = await sb.from('contas').insert({ owner_id: USER.id, ...payload }).select().single();
         if (error) { showAlert('ec-alert', error.message, 'err', 0); return; }
         S.contas.push({ ...data, saldo_inicial: +data.saldo_inicial });
       } else {
-        const { error } = await sb.from('contas').update({ nome, tipo, saldo_inicial: saldo, cor }).eq('id', id);
+        const { error } = await sb.from('contas').update(payload).eq('id', id);
         if (error) { showAlert('ec-alert', error.message, 'err', 0); return; }
         const idx = S.contas.findIndex(x => x.id === id);
-        if (idx !== -1) S.contas[idx] = { ...S.contas[idx], nome, tipo, saldo_inicial: saldo, cor };
+        if (idx !== -1) S.contas[idx] = { ...S.contas[idx], ...payload };
       }
       fecharModal('modal-conta'); render();
-      // Limpa form para próxima criação
       ['ec-id', 'ec-nome', 'ec-saldo'].forEach(x => document.getElementById(x).value = '');
+      document.getElementById('ec-banco').value = '';
     }
 
     // ── CARTÃO ───────────────────────────────────────────────────
@@ -3023,6 +3052,7 @@
       document.getElementById('ecar-limite').value = c.limite || '';
       document.getElementById('ecar-cor').value = c.cor;
       document.getElementById('ecar-alert').innerHTML = '';
+      popularGridBanco('ecar-banco-grid', 'ecar-banco', c.banco || '');
       _openModal('modal-cartao');
     }
     async function salvarCartao() {
@@ -3032,6 +3062,7 @@
       const vencimento = +document.getElementById('ecar-vence').value;
       const limite = parseFloat(document.getElementById('ecar-limite').value) || null;
       const cor = document.getElementById('ecar-cor').value;
+      const banco = document.getElementById('ecar-banco').value || null;
       if (!nome || !fechamento || !vencimento) { showAlert('ecar-alert', 'Preencha nome, fechamento e vencimento', 'err', 0); return; }
       if (!id) {
         const { data, error } = await sb.from('cartoes').insert({ owner_id: USER.id, nome, fechamento, vencimento, limite, cor }).select().single();
@@ -3143,6 +3174,7 @@
       document.getElementById('ep-email').value = p.email || '';
       document.getElementById('ep-cor').value = p.cor;
       document.getElementById('ep-alert').innerHTML = '';
+      popularGridAvatar('ep-avatar-grid', 'ep-avatar', p.avatar || '');
       _openModal('modal-pessoa');
     }
     async function salvarPessoa() {
@@ -3150,6 +3182,7 @@
       const nome = document.getElementById('ep-nome').value.trim();
       const email = document.getElementById('ep-email').value.trim() || null;
       const cor = document.getElementById('ep-cor').value;
+      const avatar = document.getElementById('ep-avatar').value || null;
       if (!nome) { showAlert('ep-alert', 'Informe o nome', 'err', 0); return; }
       const payload = { nome, email, cor };
       if (!id) {
@@ -3173,6 +3206,7 @@
       document.getElementById('ecat-nome').value = cat.nome;
       document.getElementById('ecat-cor').value = cat.cor;
       document.getElementById('ecat-alert').innerHTML = '';
+      popularGridIcone('ecat-icone-grid', 'ecat-icone', cat.icone || '📝');
       _openModal('modal-cat');
     }
     async function salvarCat() {

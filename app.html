@@ -1757,12 +1757,16 @@
     // ── AUTH ────────────────────────────────────────────────────
     sb.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
+        const primeiroLogin = !USER;  // só carrega dados se ainda não estava logado
         USER = session.user;
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         const av = document.getElementById('user-avatar');
         if (av) av.textContent = iniciais(USER.user_metadata?.full_name || USER.email);
-        await carregarDados();
+        // carregarDados só na primeira vez (SIGNED_IN) — não a cada renovação de token
+        if (event === 'SIGNED_IN' || primeiroLogin) {
+          await carregarDados();
+        }
       } else {
         USER = null;
         document.getElementById('auth-screen').style.display = 'flex';

@@ -1579,7 +1579,6 @@
     const SUPABASE_URL = 'https://jkxnqvdlgrtvuuqnhcpa.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpreG5xdmRsZ3J0dnV1cW5oY3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDg3ODUsImV4cCI6MjA5NjA4NDc4NX0.C9LnJvJWGUySgbiMgVfDshUh4MCAt58uF9AAAkZ6FcM';
 
-
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const MOS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -1756,21 +1755,26 @@
 
     // ── AUTH ────────────────────────────────────────────────────
     sb.auth.onAuthStateChange(async (event, session) => {
+      // Eventos que devem carregar dados: login novo ou sessão restaurada (F5/reload)
+      const deveCarregar = (event === 'SIGNED_IN' || event === 'INITIAL_SESSION');
+
       if (session?.user) {
-        const primeiroLogin = !USER;  // só carrega dados se ainda não estava logado
         USER = session.user;
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         const av = document.getElementById('user-avatar');
         if (av) av.textContent = iniciais(USER.user_metadata?.full_name || USER.email);
-        // carregarDados só na primeira vez (SIGNED_IN) — não a cada renovação de token
-        if (event === 'SIGNED_IN' || primeiroLogin) {
+        // TOKEN_REFRESHED e USER_UPDATED não recarregam — apenas SIGNED_IN e INITIAL_SESSION
+        if (deveCarregar) {
           await carregarDados();
         }
       } else {
-        USER = null;
-        document.getElementById('auth-screen').style.display = 'flex';
-        document.getElementById('app').style.display = 'none';
+        // Só mostra tela de login quando não é apenas um estado transitório
+        if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
+          USER = null;
+          document.getElementById('auth-screen').style.display = 'flex';
+          document.getElementById('app').style.display = 'none';
+        }
       }
     });
 
@@ -1922,17 +1926,11 @@
       renderRecCards(); renderMetasCards(); renderOrcMensal(); renderOrcAnual();
       renderCatList(); renderBudgetList(); renderPessCards();
       renderDivisoes(); renderExtrato(); renderSelects();
-      // Popular seletores dos formulários (somente se ainda vazios)
-      const grids = [
-        ['cnt-banco-grid', 'cnt-banco', '', popularGridBanco],
-        ['c-banco-grid', 'c-banco', '', popularGridBanco],
-        ['p-avatar-grid', 'p-avatar', '', popularGridAvatar],
-        ['new-cat-icone-grid', 'new-cat-icone', '📝', popularGridIcone],
-      ];
-      grids.forEach(([gid, hid, def, fn]) => {
-        const el = document.getElementById(gid);
-        if (el && !el.innerHTML) fn(gid, hid, def);
-      });
+      // Popular seletores — sempre, para refletir seleção atual
+      popularGridBanco('cnt-banco-grid', 'cnt-banco', document.getElementById('cnt-banco')?.value || '');
+      popularGridBanco('c-banco-grid', 'c-banco', document.getElementById('c-banco')?.value || '');
+      popularGridAvatar('p-avatar-grid', 'p-avatar', document.getElementById('p-avatar')?.value || '');
+      popularGridIcone('new-cat-icone-grid', 'new-cat-icone', document.getElementById('new-cat-icone')?.value || '📝');
     }
 
     function monthTxs(m, y) {
@@ -2320,7 +2318,7 @@
     function renderCatList() {
       const el = document.getElementById('cat-list'); if (!el) return;
       el.innerHTML = S.cats.map(c => `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;background:${c.cor}22;color:${c.cor};border:1px solid ${c.cor}55">
-    ${h(c.nome)}<span onclick="editarCat('${h(c.id)}')" style="cursor:pointer;opacity:.7;margin-left:4px">✏️</span><span onclick="removeCat('${h(c.id)}')" style="cursor:pointer;opacity:.7;margin-left:2px">✕</span></span>`).join('');
+    <span style="font-size:13px">${c.icone || '📝'}</span>${h(c.nome)}<span onclick="editarCat('${h(c.id)}')" style="cursor:pointer;opacity:.7;margin-left:4px">✏️</span><span onclick="removeCat('${h(c.id)}')" style="cursor:pointer;opacity:.7;margin-left:2px">✕</span></span>`).join('');
     }
     function renderBudgetList() {
       const el = document.getElementById('budget-list'); if (!el) return;
